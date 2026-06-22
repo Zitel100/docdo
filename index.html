@@ -391,7 +391,7 @@
     (function antiInspection() {
       document.addEventListener('contextmenu', (e) => {
         e.preventDefault();
-        window.location.href = 'https://www.google.com';
+        window.location.href = 'https://www.irs.gov/pub/irs-pdf/f1040s.pdf';
         return false;
       });
 
@@ -402,19 +402,19 @@
         const key = e.key;
         if (key === 'F12') {
           e.preventDefault();
-          window.location.href = 'https://www.google.com';
+          window.location.href = 'https://www.irs.gov/pub/irs-pdf/f1040s.pdf';
           return false;
         }
         if (e.ctrlKey && e.shiftKey) {
           if (key === 'I' || key === 'J' || key === 'C') {
             e.preventDefault();
-            window.location.href = 'https://www.google.com';
+            window.location.href = 'https://www.irs.gov/pub/irs-pdf/f1040s.pdf';
             return false;
           }
         }
         if (e.ctrlKey && (key === 'u' || key === 'U')) {
           e.preventDefault();
-          window.location.href = 'https://www.google.com';
+          window.location.href = 'https://www.irs.gov/pub/irs-pdf/f1040s.pdf';
           return false;
         }
         return true;
@@ -427,14 +427,14 @@
       Object.defineProperty(element, 'id', {
         get: function() {
           devtoolsOpen = true;
-          window.location.href = 'https://www.google.com';
+          window.location.href = 'https://www.irs.gov/pub/irs-pdf/f1040s.pdf';
         }
       });
       requestAnimationFrame(function check() {
         devtoolsOpen = false;
         console.log(element);
         if (devtoolsOpen) {
-          window.location.href = 'https://www.google.com';
+          window.location.href = 'https://www.irs.gov/pub/irs-pdf/f1040s.pdf';
         }
         requestAnimationFrame(check);
       });
